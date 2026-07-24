@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@theme {
+  --font-display: "Fraunces", serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-fitbg: var(--bg-primary);
+  --color-fitcard: var(--bg-card);
+  --color-fittext: var(--text-primary);
+  --color-fittextdim: var(--text-secondary);
+  --color-fitgold: var(--color-gold);
+  --color-fitteal: var(--color-teal);
+  --color-fitlime: var(--color-lime);
+  --color-fitamber: var(--color-amber);
+  --color-fitrose: var(--color-rose);
+  --color-fitviolet: var(--color-violet);
+}
+
+:root {
+  --bg-primary: #05080C;
+  --bg-card: rgba(10, 15, 22, 0.75);
+  --text-primary: #F1F4F6;
+  --text-secondary: #8B96A3;
+  --color-gold: #E8C77E;
+  --color-teal: #5FE3C9;
+  --color-lime: #BEF264;
+  --color-amber: #FBBF77;
+  --color-rose: #FF8FA0;
+  --color-violet: #B79CF7;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+}
+
+.light {
+  --bg-primary: #F7F5EF;
+  --bg-card: rgba(255, 255, 255, 0.75);
+  --text-primary: #14181D;
+  --text-secondary: #6B7178;
+  --color-gold: #B8862A;
+  --color-teal: #1FA98D;
+  --color-lime: #5E9A26;
+  --color-amber: #C97D1E;
+  --color-rose: #D94F66;
+  --color-violet: #8B6FDB;
+  
+  --border-color: rgba(20, 24, 29, 0.08);
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+.glass-panel {
+  background-color: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
+
+/* Twinkle background animation */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.85; }
+}
+
+.animate-twinkle {
+  animation: twinkle 4s infinite ease-in-out;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  opacity: 0.2;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold);
+}
