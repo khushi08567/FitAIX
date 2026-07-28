@@ -17,7 +17,27 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ─── Health Check ─────────────────────────────────────────────────────────────
+// ─── Root & Health Check ───────────────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    name: 'FitAI X API Server',
+    status: 'running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    documentation: 'Welcome to FitAI X Backend. Use /health for service health or /api/v1/nutrition for nutrition endpoints.',
+    endpoints: [
+      'GET /',
+      'GET /health',
+      'GET /api/v1/nutrition/:userId/daily',
+      'GET /api/v1/nutrition/:userId/macros',
+      'GET /api/v1/nutrition/:userId/bmi',
+      'POST /api/v1/nutrition/grocery/generate',
+      'GET /api/v1/nutrition/:userId/shopping'
+    ]
+  });
+});
+
 app.get('/health', (_req, res) => {
   res.json({
     service: 'FitAIX Nutrition Service',
