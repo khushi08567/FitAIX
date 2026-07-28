@@ -3,6 +3,7 @@
 
 import type { AIMealRecommendation, GroceryItem } from '../types/nutrition.types';
 import { v4 as uuidv4 } from 'uuid';
+import { preferencesStore } from '../models/nutrition.model';
 
 const BREAKFAST_POOL: AIMealRecommendation[] = [
   {
@@ -123,13 +124,31 @@ const SNACK_POOL: AIMealRecommendation[] = [
 // ─── Public AI Service Functions ─────────────────────────────────────────────
 
 export function generateAIMeals(userId: string): AIMealRecommendation[] {
-  // Randomly pick from each pool to simulate AI variety
+  const prefs = preferencesStore.get(userId);
+  const isVegetarian = prefs?.dietaryPreferences.map(p => p.toLowerCase()).includes('vegetarian') || false;
+  const isVegan = prefs?.dietaryPreferences.map(p => p.toLowerCase()).includes('vegan') || false;
+
+  let breakfastPool = BREAKFAST_POOL;
+  let lunchPool = LUNCH_POOL;
+  let dinnerPool = DINNER_POOL;
+  let snackPool = SNACK_POOL;
+
+  if (isVegetarian || isVegan) {
+    breakfastPool = BREAKFAST_POOL.filter(m => m.name !== 'Masala Omelette with Toast');
+    lunchPool = LUNCH_POOL.filter(m => m.name !== 'Grilled Chicken & Quinoa Bowl');
+    dinnerPool = DINNER_POOL.filter(m => m.name !== 'Baked Salmon with Steamed Veggies');
+    if (isVegan) {
+      dinnerPool = dinnerPool.filter(m => m.name !== 'Paneer Stir-fry with Roti');
+      snackPool = SNACK_POOL.filter(m => m.name !== 'Greek Yogurt with Almonds');
+    }
+  }
+
   const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
   return [
-    { ...pick(BREAKFAST_POOL), id: uuidv4() },
-    { ...pick(LUNCH_POOL), id: uuidv4() },
-    { ...pick(DINNER_POOL), id: uuidv4() },
-    { ...pick(SNACK_POOL), id: uuidv4() },
+    { ...pick(breakfastPool), id: uuidv4() },
+    { ...pick(lunchPool), id: uuidv4() },
+    { ...pick(dinnerPool), id: uuidv4() },
+    { ...pick(snackPool), id: uuidv4() },
   ];
 }
 

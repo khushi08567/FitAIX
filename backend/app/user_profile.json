@@ -1,0 +1,35 @@
+{
+  "name": "Simran",
+  "age": 25,
+  "height_cm": 168,
+  "weight_kg": 60,
+  "goal": "Muscle Gain & Injury Recovery",
+  "today_workout_focus": "Legs",
+  "sleep_hours": 7.75,
+  "recovery_score": 82,
+  "calories_limit": 2200,
+  "calories_consumed": 1480,
+  "protein_target_g": 165,
+  "protein_consumed_g": 87,
+  "carbs_consumed_g": 172,
+  "fat_consumed_g": 42,
+  "hydration_target_ml": 2500,
+  "hydration_consumed_ml": 1750,
+  "injuries": [
+    "left knee patellar tendinitis (avoid deep squats or high-impact jumping)"
+  ],
+  "preferences": [
+    "low-carb",
+    "vegetarian",
+    "high-protein"
+  ],
+  "allergies": [
+    "peanuts"
+  ],
+  "user_facts": [
+    "eggs",
+    "i want to change my diet preference to vegetarian",
+    "grilled chicken",
+    "oatmeal"
+  ]
+}

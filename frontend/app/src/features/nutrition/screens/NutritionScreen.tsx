@@ -1,5 +1,5 @@
 // ─── Single Nutrition Dashboard Screen — Apex Noir Theme ───────────────────────
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,6 +8,8 @@ import {
   StatusBar,
   RefreshControl,
   Alert,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
 
 // Store & Hooks
@@ -48,10 +50,12 @@ import { GroceryGenerator } from '../components/GroceryGenerator';
 import { ShoppingChecklist } from '../components/ShoppingChecklist';
 import { FoodPreferencesComponent } from '../components/FoodPreferences';
 import { BottomNav } from '../components/BottomNav';
+import { RachelChatModal } from '../components/RachelChatModal';
 
 export const NutritionScreen: React.FC = () => {
   // ─── Store State ─────────────────────────────────────────────────────────────
   const store = useNutritionStore();
+  const [showChat, setShowChat] = useState(false);
 
   // ─── Data Queries ────────────────────────────────────────────────────────────
   const { data: dailyData, isRefetching, refetch } = useDailyNutrition();
@@ -214,6 +218,18 @@ export const NutritionScreen: React.FC = () => {
 
       {/* Bottom Navigation */}
       <BottomNav activeTab="Nutrition" />
+
+      {/* Floating Rachel AI Coach Chat button */}
+      <TouchableOpacity
+        style={styles.floatingChatBtn}
+        onPress={() => setShowChat(true)}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.floatingChatBtnText}>🤖</Text>
+      </TouchableOpacity>
+
+      {/* Coach Chat Overlay */}
+      <RachelChatModal visible={showChat} onClose={() => setShowChat(false)} />
     </SafeAreaView>
   );
 };
@@ -231,6 +247,27 @@ const styles = StyleSheet.create({
   },
   bodyContent: {
     paddingHorizontal: 20,
+  },
+  floatingChatBtn: {
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFD60A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    borderWidth: 2,
+    borderColor: '#12110D',
+  },
+  floatingChatBtnText: {
+    fontSize: 24,
   },
 });
 

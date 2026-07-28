@@ -16,17 +16,6 @@ import RecoveryCalculator from './components/RecoveryCalculator';
 import MealGroceryPlanner from './components/MealGroceryPlanner';
 import SmartCalendarScenarios from './components/SmartCalendarScenarios';
 
-const COLORS = {
-  gold: { dark: '#E8C77E', light: '#B8862A' },
-  teal: { dark: '#5FE3C9', light: '#1FA98D' },
-  lime: { dark: '#BEF264', light: '#5E9A26' },
-  amber: { dark: '#FBBF77', light: '#C97D1E' },
-  rose: { dark: '#FF8FA0', light: '#D94F66' },
-  violet: { dark: '#B79CF7', light: '#8B6FDB' },
-  textDim: { dark: '#8B96A3', light: '#6B7178' },
-  bgCard: { dark: '#0A0F16', light: '#FFFFFF' }
-};
-
 const USER_AVATARS = {
   "Sarah Jenkins": "🏃‍♀️",
   "Marcus Chen": "🏋️‍♂️",
@@ -41,12 +30,10 @@ export default function App() {
   const [selectedUser, setSelectedUser] = useState("Sarah Jenkins");
   const [userData, setUserData] = useState(usersDatabase);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  const [userFilter, setUserFilter] = useState('');
-  
+
   // UI Drawers & Modals
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isCoachOpen, setIsCoachOpen] = useState(false);
-  const [isWhyDrawerOpen, setIsWhyDrawerOpen] = useState(false);
 
   // Workout Studio Simulation States
   const [simDuration, setSimDuration] = useState('45'); // 20, 30, 45
@@ -56,7 +43,6 @@ export default function App() {
   const activeUser = userData[selectedUser];
   const entries = activeUser.entries;
   const derivedScoresState = activeUser.scores;
-  const nodeExplanationNotes = activeUser.explanationNotes;
   const recoveryHistory = activeUser.recoveryHistory;
   const consistencyData = activeUser.consistencyData;
 
@@ -69,38 +55,11 @@ export default function App() {
     return entries.find(e => e.type === "INJURY_REPORTED" && e.details.status !== "resolved" && e.visibility !== "user-hidden");
   }, [entries]);
 
-  // Updater for user entries
-  const setEntries = (updater) => {
-    setUserData(prev => {
-      const currentUserData = prev[selectedUser];
-      const nextEntries = typeof updater === 'function' ? updater(currentUserData.entries) : updater;
-      
-      let nextScores = [...currentUserData.scores];
-      const hasActiveInjury = nextEntries.some(e => e.type === "INJURY_REPORTED" && e.details.status !== "resolved" && e.visibility !== "user-hidden");
-      
-      if (!hasActiveInjury) {
-        nextScores = nextScores.map(s => s.id === 'score-injury' ? { ...s, value: 20, trend: 'improving' } : s);
-      } else {
-        nextScores = nextScores.map(s => s.id === 'score-injury' ? { ...s, value: 65, trend: 'watch' } : s);
-      }
-
-      return {
-        ...prev,
-        [selectedUser]: {
-          ...currentUserData,
-          entries: nextEntries,
-          scores: nextScores
-        }
-      };
-    });
-  };
-
   // Timeline Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [inferredOnly, setInferredOnly] = useState(false);
   const [userConfirmedOnly, setUserConfirmedOnly] = useState(false);
-  const [expandedEntryId, setExpandedEntryId] = useState(null);
 
   // Chat Histories
   const [coachChatHistories, setCoachChatHistories] = useState({
@@ -188,8 +147,6 @@ export default function App() {
       
       {/* Top Header Controls Bar */}
       <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800/80 backdrop-blur-xl px-4 lg:px-8 py-3 flex items-center justify-between">
-        
-        {/* Logo & Title */}
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-400 via-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20 text-slate-950 font-black text-xl tracking-tighter">
             F
@@ -205,10 +162,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Header Right Actions */}
         <div className="flex items-center space-x-3">
-          
-          {/* User Persona Selector */}
           <div className="relative">
             <button
               onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -244,7 +198,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Command Palette Trigger Button */}
           <button
             onClick={() => setIsCommandOpen(true)}
             className="flex items-center space-x-2 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-mono text-slate-300 transition-all cursor-pointer"
@@ -254,7 +207,6 @@ export default function App() {
             <span className="hidden md:inline">Ctrl+K</span>
           </button>
 
-          {/* AI Coach Drawer Toggle */}
           <button
             onClick={() => setIsCoachOpen(true)}
             className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs font-mono shadow-md hover:opacity-90 transition-all cursor-pointer"
@@ -263,7 +215,6 @@ export default function App() {
             <span className="hidden sm:inline">AI Coach (Rachel)</span>
           </button>
 
-          {/* Theme Switcher */}
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors"
@@ -273,7 +224,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main 8-Tab Navigation Bar */}
+      {/* Navigation Tabs */}
       <div className="bg-slate-900/60 border-b border-slate-800/60 px-4 lg:px-8 py-2 overflow-x-auto">
         <div className="flex space-x-2 min-w-max">
           {[
@@ -306,88 +257,56 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Workspace Body Container */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 pt-6">
-        
-        {/* 1. DASHBOARD OVERVIEW TAB */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            
-            {/* Top Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              
-              {/* Recovery Score Card */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono text-slate-400">
                   <span>Recovery Score</span>
                   <HeartPulse className="w-4 h-4 text-emerald-400" />
                 </div>
-                <div className="text-3xl font-bold font-mono text-emerald-400">
-                  {activeUser.recovery}%
-                </div>
-                <div className="text-xs text-slate-400 font-mono">
-                  Optimal capacity • Sleep: 7.5 hrs
-                </div>
+                <div className="text-3xl font-bold font-mono text-emerald-400">{activeUser.recovery}%</div>
+                <div className="text-xs text-slate-400 font-mono">Optimal capacity • Sleep: 7.5 hrs</div>
               </div>
 
-              {/* Active Goal Card */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono text-slate-400">
                   <span>Active Goal</span>
                   <Target className="w-4 h-4 text-teal-400" />
                 </div>
-                <div className="text-sm font-bold text-slate-100 truncate">
-                  {activeGoal}
-                </div>
-                <div className="text-xs text-teal-400 font-mono">
-                  Full AI plan recalculation active
-                </div>
+                <div className="text-sm font-bold text-slate-100 truncate">{activeGoal}</div>
+                <div className="text-xs text-teal-400 font-mono">Full AI plan recalculation active</div>
               </div>
 
-              {/* Streak Protection Card */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono text-slate-400">
                   <span>Streak Protection</span>
                   <ShieldAlert className="w-4 h-4 text-amber-400" />
                 </div>
-                <div className="text-2xl font-bold font-mono text-amber-300">
-                  14 Days Active
-                </div>
-                <button
-                  onClick={() => handleQuickAction('streak-saver')}
-                  className="text-[11px] text-amber-400 hover:underline font-mono cursor-pointer"
-                >
+                <div className="text-2xl font-bold font-mono text-amber-300">14 Days Active</div>
+                <button onClick={() => handleQuickAction('streak-saver')} className="text-[11px] text-amber-400 hover:underline font-mono cursor-pointer">
                   Trigger 5-min micro workout ➔
                 </button>
               </div>
 
-              {/* Injury Warning Status Card */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono text-slate-400">
                   <span>Injury Guardrail</span>
                   <AlertTriangle className="w-4 h-4 text-rose-400" />
                 </div>
-                <div className="text-sm font-bold text-slate-100">
-                  {activeInjury ? activeInjury.summary : 'No active injuries'}
-                </div>
-                <div className="text-xs text-slate-400 font-mono">
-                  {activeInjury ? 'Safety swaps enforced' : '100% load clearance'}
-                </div>
+                <div className="text-sm font-bold text-slate-100">{activeInjury ? activeInjury.summary : 'No active injuries'}</div>
+                <div className="text-xs text-slate-400 font-mono">{activeInjury ? 'Safety swaps enforced' : '100% load clearance'}</div>
               </div>
             </div>
 
-            {/* Today's Recommended Workout Preview */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center space-x-2">
                   <Dumbbell className="w-5 h-5 text-teal-400" />
                   <h3 className="font-bold text-slate-100 text-lg">Today's Best Workout ({selectedUser})</h3>
                 </div>
-
-                <button
-                  onClick={() => setActiveTab('studio')}
-                  className="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 rounded-xl text-xs font-mono transition-all cursor-pointer"
-                >
+                <button onClick={() => setActiveTab('studio')} className="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 rounded-xl text-xs font-mono transition-all cursor-pointer">
                   Launch Simulator Studio ➔
                 </button>
               </div>
@@ -395,9 +314,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
                   <div className="text-xs font-mono text-slate-400">Primary Exercise 1</div>
-                  <div className="font-bold text-slate-200">
-                    {activeInjury?.details?.affectedArea === 'knee' ? 'Leg Press (Knee Safe)' : 'Barbell Back Squats'}
-                  </div>
+                  <div className="font-bold text-slate-200">{activeInjury?.details?.affectedArea === 'knee' ? 'Leg Press (Knee Safe)' : 'Barbell Back Squats'}</div>
                   <div className="text-xs font-mono text-teal-400">4 sets × 10-12 reps</div>
                 </div>
 
@@ -414,15 +331,11 @@ export default function App() {
                 </div>
               </div>
             </div>
-
           </div>
         )}
 
-        {/* 2. ADAPTIVE WORKOUT STUDIO TAB */}
         {activeTab === 'studio' && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            
-            {/* Header Simulator Controls */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
@@ -435,34 +348,18 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Duration & Location Toggles */}
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="bg-slate-800 p-1 rounded-xl flex space-x-1 text-xs font-mono">
                     {['20', '30', '45'].map(d => (
-                      <button
-                        key={d}
-                        onClick={() => setSimDuration(d)}
-                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                          simDuration === d ? 'bg-teal-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
+                      <button key={d} onClick={() => setSimDuration(d)} className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${simDuration === d ? 'bg-teal-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'}`}>
                         {d}m
                       </button>
                     ))}
                   </div>
 
                   <div className="bg-slate-800 p-1 rounded-xl flex space-x-1 text-xs font-mono">
-                    {[
-                      { id: 'gym', label: '🏋️ Gym' },
-                      { id: 'home', label: '🏠 Home' }
-                    ].map(l => (
-                      <button
-                        key={l.id}
-                        onClick={() => setSimLocation(l.id)}
-                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                          simLocation === l.id ? 'bg-teal-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
+                    {[{ id: 'gym', label: '🏋️ Gym' }, { id: 'home', label: '🏠 Home' }].map(l => (
+                      <button key={l.id} onClick={() => setSimLocation(l.id)} className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${simLocation === l.id ? 'bg-teal-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'}`}>
                         {l.label}
                       </button>
                     ))}
@@ -470,26 +367,16 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Conflict Warning Banner */}
               {activeInjury && (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs font-mono text-amber-300">
                   <div className="flex items-center space-x-2">
                     <AlertTriangle className="w-4 h-4 text-amber-400" />
-                    <span>
-                      Conflict Warning Active: {activeInjury.summary}. Contraindicated exercises (e.g. Heavy Squats) automatically replaced.
-                    </span>
+                    <span>Conflict Warning Active: {activeInjury.summary}. Contraindicated exercises automatically replaced.</span>
                   </div>
-                  <button
-                    onClick={() => setIsWhyDrawerOpen(!isWhyDrawerOpen)}
-                    className="underline text-amber-400 hover:text-amber-200 cursor-pointer"
-                  >
-                    View AI Reason "Why"
-                  </button>
                 </div>
               )}
             </div>
 
-            {/* Generated Workout Cards Grid */}
             <div className="space-y-4">
               <h3 className="text-sm font-mono text-slate-400 uppercase tracking-wider">
                 Simulated Plan ({simDuration} mins • {simLocation.toUpperCase()})
@@ -497,27 +384,9 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  {
-                    name: simLocation === 'home' ? 'Bodyweight Bulgarian Split Squats' : (activeInjury?.details?.affectedArea === 'knee' ? 'Leg Press Machine' : 'Barbell Back Squat'),
-                    sets: simDuration === '20' ? 2 : 4,
-                    reps: '12-15',
-                    rest: '60s',
-                    note: activeInjury?.details?.affectedArea === 'knee' ? 'Substituted to protect left knee tendonitis' : 'Optimal progressive overload'
-                  },
-                  {
-                    name: simLocation === 'home' ? 'Dumbbell Romanian Deadlifts' : 'Barbell Romanian Deadlift',
-                    sets: 3,
-                    reps: '10',
-                    rest: '90s',
-                    note: 'Posterior chain focus'
-                  },
-                  {
-                    name: 'Hanging Knee Raises / Plank',
-                    sets: 3,
-                    reps: '15',
-                    rest: '45s',
-                    note: 'Core stability'
-                  }
+                  { name: simLocation === 'home' ? 'Bodyweight Bulgarian Split Squats' : (activeInjury?.details?.affectedArea === 'knee' ? 'Leg Press Machine' : 'Barbell Back Squat'), sets: simDuration === '20' ? 2 : 4, reps: '12-15', rest: '60s', note: activeInjury?.details?.affectedArea === 'knee' ? 'Substituted to protect left knee tendonitis' : 'Optimal progressive overload' },
+                  { name: simLocation === 'home' ? 'Dumbbell Romanian Deadlifts' : 'Barbell Romanian Deadlift', sets: 3, reps: '10', rest: '90s', note: 'Posterior chain focus' },
+                  { name: 'Hanging Knee Raises / Plank', sets: 3, reps: '15', rest: '45s', note: 'Core stability' }
                 ].map((ex, idx) => (
                   <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
                     <div className="flex items-center justify-between">
@@ -525,140 +394,76 @@ export default function App() {
                       <span className="text-xs font-mono text-teal-400">{ex.sets} sets × {ex.reps}</span>
                     </div>
                     <div className="text-xs text-slate-400 font-mono">Rest: {ex.rest}</div>
-                    <div className="text-[11px] text-teal-300/80 font-mono p-2 bg-slate-950 rounded-lg border border-slate-800">
-                      💡 {ex.note}
-                    </div>
+                    <div className="text-[11px] text-teal-300/80 font-mono p-2 bg-slate-950 rounded-lg border border-slate-800">💡 {ex.note}</div>
                   </div>
                 ))}
               </div>
             </div>
-
           </div>
         )}
 
-        {/* 3. WORKOUT VERSION CONTROL TAB */}
         {activeTab === 'vcs' && (
-          <WorkoutVersionControl
-            selectedUser={selectedUser}
-            onRollback={(ver) => console.log('Rolled back to', ver)}
-          />
+          <WorkoutVersionControl selectedUser={selectedUser} onRollback={(ver) => console.log('Rolled back to', ver)} />
         )}
 
-        {/* 4. AI EXERCISE GRAPH TAB */}
         {activeTab === 'graph' && (
-          <ExerciseGraphView
-            selectedUser={selectedUser}
-            activeInjury={activeInjury}
-          />
+          <ExerciseGraphView selectedUser={selectedUser} activeInjury={activeInjury} />
         )}
 
-        {/* 5. SMART CALENDAR & SCENARIOS TAB */}
         {activeTab === 'calendar' && (
-          <SmartCalendarScenarios
-            selectedUser={selectedUser}
-            onTriggerStreakProtection={() => alert("5-Minute Streak Protection Micro-Workout Triggered!")}
-          />
+          <SmartCalendarScenarios selectedUser={selectedUser} onTriggerStreakProtection={() => alert("5-Minute Streak Protection Micro-Workout Triggered!")} />
         )}
 
-        {/* 6. AI RECOVERY CALCULATOR TAB */}
         {activeTab === 'recovery' && (
-          <RecoveryCalculator
-            selectedUser={selectedUser}
-            currentScore={activeUser.recovery}
-            onUpdateRecovery={(score) => {
-              setUserData(prev => ({
-                ...prev,
-                [selectedUser]: { ...prev[selectedUser], recovery: score }
-              }));
-              alert(`Updated recovery score for ${selectedUser} to ${score}%!`);
-            }}
-          />
+          <RecoveryCalculator selectedUser={selectedUser} currentScore={activeUser.recovery} onUpdateRecovery={(score) => {
+            setUserData(prev => ({ ...prev, [selectedUser]: { ...prev[selectedUser], recovery: score } }));
+            alert(`Updated recovery score for ${selectedUser} to ${score}%!`);
+          }} />
         )}
 
-        {/* 7. MEAL & GROCERY BUDGET TAB */}
         {activeTab === 'meals' && (
           <MealGroceryPlanner selectedUser={selectedUser} />
         )}
 
-        {/* 8. AI MEMORY TIMELINE & ANALYTICS TAB */}
         {activeTab === 'timeline' && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            
-            {/* Timeline Search & Filter Bar */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="relative w-full sm:w-72">
                   <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                  <input
-                    type="text"
-                    placeholder="Search memory nodes or tags..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl pl-9 pr-4 py-2 font-mono focus:outline-none focus:border-teal-500"
-                  />
+                  <input type="text" placeholder="Search memory nodes or tags..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl pl-9 pr-4 py-2 font-mono focus:outline-none focus:border-teal-500" />
                 </div>
-
                 <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
                   <label className="flex items-center space-x-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inferredOnly}
-                      onChange={(e) => setInferredOnly(e.target.checked)}
-                      className="accent-teal-500"
-                    />
+                    <input type="checkbox" checked={inferredOnly} onChange={(e) => setInferredOnly(e.target.checked)} className="accent-teal-500" />
                     <span>AI Inferred Only</span>
                   </label>
                 </div>
               </div>
             </div>
 
-            {/* Memory Nodes Timeline List */}
             <div className="space-y-3">
               {filteredTimelineEntries.map(entry => (
                 <div key={entry.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2 hover:border-slate-700 transition-all">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="px-2 py-0.5 bg-teal-500/10 text-teal-300 rounded border border-teal-500/30">
-                      {entry.type}
-                    </span>
+                    <span className="px-2 py-0.5 bg-teal-500/10 text-teal-300 rounded border border-teal-500/30">{entry.type}</span>
                     <span className="text-slate-500">{new Date(entry.timestamp).toLocaleDateString()}</span>
                   </div>
-
                   <h4 className="font-bold text-slate-100 text-sm">{entry.summary}</h4>
-
                   <div className="flex flex-wrap gap-1 pt-1">
                     {entry.tags && entry.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] rounded font-mono">
-                        #{tag}
-                      </span>
+                      <span key={idx} className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] rounded font-mono">#{tag}</span>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-
           </div>
         )}
-
       </main>
 
-      {/* Global Command Palette Component */}
-      <CommandPalette
-        isOpen={isCommandOpen}
-        onClose={() => setIsCommandOpen(false)}
-        onSelectTab={handleCommandTabSelect}
-        onTriggerAction={handleQuickAction}
-      />
-
-      {/* AI Coach Drawer Component */}
-      <AICoachDrawer
-        isOpen={isCoachOpen}
-        onClose={() => setIsCoachOpen(false)}
-        selectedUser={selectedUser}
-        chatHistory={coachChatHistories[selectedUser] || []}
-        onSendMessage={handleSendMessage}
-        activeInjury={activeInjury}
-        recoveryScore={activeUser.recovery}
-      />
+      <CommandPalette isOpen={isCommandOpen} onClose={() => setIsCommandOpen(false)} onSelectTab={handleCommandTabSelect} onTriggerAction={handleQuickAction} />
+      <AICoachDrawer isOpen={isCoachOpen} onClose={() => setIsCoachOpen(false)} selectedUser={selectedUser} chatHistory={coachChatHistories[selectedUser] || []} onSendMessage={handleSendMessage} activeInjury={activeInjury} recoveryScore={activeUser.recovery} />
     </div>
   );
 }
