@@ -9,8 +9,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
-  SafeAreaView
+  Platform
 } from 'react-native';
 
 // Interfaces matching backend schemas
@@ -101,7 +100,6 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
     setIsThinking(true);
 
     try {
-      // Map history for Python backend
       const historyPayload = messages.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         text: msg.text
@@ -129,7 +127,6 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
       setMessages(prev => [...prev, coachMsg]);
     } catch (err) {
       console.error('FastAPI fetch error:', err);
-      // Fallback offline message
       const offlineMsg: Message = {
         id: `msg-${Date.now()}`,
         sender: 'coach',
@@ -225,13 +222,13 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.modalOverlay}>
-        <SafeAreaView style={styles.safeArea}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.keyboardContainer}
-          >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardContainer}
+        >
+          <View style={styles.chatWindow}>
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerTitleContainer}>
@@ -289,8 +286,8 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
                 <Text style={styles.sendBtnText}>Send</Text>
               </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
+          </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -299,13 +296,30 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 15, 22, 0.96)',
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   keyboardContainer: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 540,
+    height: '80%',
+    maxHeight: 700,
+  },
+  chatWindow: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#12110D',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
   },
   header: {
     flexDirection: 'row',
