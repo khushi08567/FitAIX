@@ -1,16 +1,39 @@
-# React + Vite
+# FitAI X - AI Powered Adaptive Fitness Ecosystem
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+FitAI X is an AI-driven adaptive fitness ecosystem that learns from user biometrics, goals, recovery, and injuries to dynamically generate personalized workouts, nutrition plans, and habit schedules.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Key System Features
 
-## React Compiler
+- 🏋️ **Adaptive AI Planning Engine**: Real-time workout generation based on daily sleep, recovery, mood, and equipment.
+- 🔀 **Workout Version Control**: Git-for-Workouts version control ($v1, v2, v3$), side-by-side diff viewer, and rollback engine.
+- 🕸️ **AI Exercise & Dependency Graph**: Node-based visualizer for exercise dependencies, muscle engagement, and injury contraindications.
+- 📆 **Smart Calendar & Scenario Planner**: Drag-to-shift workouts, Hotel/Travel scenarios, Rainy day swaps, and 5-min streak saver.
+- 🧮 **AI Recovery Calculator**: Live biometric sliders for sleep, hydration, stress, soreness, resting HR $\rightarrow$ recovery score & fatigue risk.
+- 🥗 **Meal & Grocery Budget Planner**: Budget-aware meal planner with hostel/apartment modes, ingredient reuse optimization, and estimated grocery costs.
+- 🔐 **Standalone Authentication & Account Recovery System**: OTP-based forgot password & password reset backend services (`server/`) and React UI (`client/`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### 1. Frontend Web Application
+```bash
+npm install
+npm run dev
+```
+*Frontend runs on `http://localhost:5173/`*
+
+### 2. Backend Services
+```bash
+cd backend
+npm run dev
+```
+*Backend runs on `http://localhost:4001/`*
+
+### 3. Authentication & Forgot Password Service
+```bash
+npm run auth-server
+```
+*Auth server runs on `http://localhost:5000/`*
