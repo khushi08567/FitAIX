@@ -71,6 +71,7 @@ def parse_and_execute_chat_actions(user_message: str) -> List[str]:
         "scramble": {"name": "Savory Tofu & Spinach Scramble", "calories": 320, "protein": 22, "carbs": 15, "fat": 18, "type": "breakfast"}
     }
     
+    logged_recipe = False
     for key, macros in food_items.items():
         if key in msg_lower:
             result = log_meal_entry(
@@ -82,9 +83,72 @@ def parse_and_execute_chat_actions(user_message: str) -> List[str]:
                 meal_type=macros["type"]
             )
             actions_taken.append(f"[System Action Success: {result}]")
+            logged_recipe = True
             break
+
+    # 3. Capture Generic Macronutrients and Calories Logging (if no specific recipe was matched)
+    if not logged_recipe:
+        parsed_calories = 0
+        parsed_protein = 0
+        parsed_carbs = 0
+        parsed_fat = 0
+        logged_any_macro = False
+
+        # Check for Calories
+        cal_match = re.search(r'(\d+)\s*(?:cal|calories|kcal)', msg_lower)
+        if cal_match:
+            parsed_calories = int(cal_match.group(1))
+            logged_any_macro = True
+
+        # Check for Protein
+        prot_match = re.search(r'(\d+)\s*g?\s*protein', msg_lower)
+        if not prot_match:
+            prot_match = re.search(r'protein\s*(?:of\s+)?(\d+)', msg_lower)
+        if prot_match:
+            parsed_protein = int(prot_match.group(1))
+            logged_any_macro = True
+            if parsed_calories == 0:
+                parsed_calories += parsed_protein * 4
+
+        # Check for Carbs
+        carb_match = re.search(r'(\d+)\s*g?\s*(?:carbs|carbohydrates)', msg_lower)
+        if not carb_match:
+            carb_match = re.search(r'(?:carbs|carbohydrates)\s*(?:of\s+)?(\d+)', msg_lower)
+        if carb_match:
+            parsed_carbs = int(carb_match.group(1))
+            logged_any_macro = True
+            if parsed_calories == 0 or cal_match is None:
+                parsed_calories += parsed_carbs * 4
+
+        # Check for Fat
+        fat_match = re.search(r'(\d+)\s*g?\s*fat', msg_lower)
+        if not fat_match:
+            fat_match = re.search(r'fat\s*(?:of\s+)?(\d+)', msg_lower)
+        if fat_match:
+            parsed_fat = int(fat_match.group(1))
+            logged_any_macro = True
+            if parsed_calories == 0 or cal_match is None:
+                parsed_calories += parsed_fat * 9
+
+        if logged_any_macro:
+            log_parts = []
+            if parsed_protein > 0: log_parts.append(f"{parsed_protein}g Protein")
+            if parsed_carbs > 0: log_parts.append(f"{parsed_carbs}g Carbs")
+            if parsed_fat > 0: log_parts.append(f"{parsed_fat}g Fat")
+            if parsed_calories > 0 and not log_parts: log_parts.append(f"{parsed_calories} kcal")
             
-    # 3. Capture Food Preference selections
+            name = "Quick Chat Log: " + ", ".join(log_parts)
+            result = log_meal_entry(
+                name=name,
+                calories=parsed_calories,
+                protein=parsed_protein,
+                carbs=parsed_carbs,
+                fat=parsed_fat,
+                meal_type="snack"
+            )
+            actions_taken.append(f"[System Action Success: {result}]")
+            
+    # 4. Capture Food Preference selections
     if "vegetarian" in msg_lower:
         result = save_preferences_express(dietary_preferences=["Vegetarian"], allergies=[], favorite_foods=[])
         actions_taken.append(f"[System Action Success: {result}]")
@@ -173,7 +237,7 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
     """
     Executes the chatbot agent using local Ollama.
     """
-    # 1. Parse conversational statements to execute Express API actions (water, meals)
+    # 1. Parse conversational statements to execute Express API actions (water, meals, macros)
     actions_taken = parse_and_execute_chat_actions(user_message)
     
     # 2. Check for personal facts to log in memory
@@ -218,9 +282,9 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
     
     # Speed & latency options to execute faster
     ollama_options = {
-        "temperature": 0.3,     # Lower temperature is faster
-        "num_predict": 180,     # Limit token length to guarantee quick replies
-        "num_ctx": 2048         # Keep context limit compact to fit in graphics RAM/CPU memory
+        "temperature": 0.3,
+        "num_predict": 180,
+        "num_ctx": 2048
     }
     
     try:
@@ -248,6 +312,7 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
         data = json.loads(json_content)
         response_obj = ChatResponse(**data)
         
+        # Prepend explicit system log confirmation if database actions succeeded
         if actions_taken:
             clean_actions = []
             for action in actions_taken:
@@ -260,8 +325,15 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
         
     except Exception as e:
         logger.error(f"Error in Ollama local agent: {e}", exc_info=True)
+        
+        fallback_msg = "I'm here to support you, but I had a little trouble processing your query on my local model. Make sure Ollama is running! How are your knees feeling today?"
+        if actions_taken:
+            clean_actions = [a.replace("[System Action Success: ", "").replace("]", "") for a in actions_taken]
+            action_header = " | ".join(clean_actions)
+            fallback_msg = f"💬 [Action Logged: {action_header}]\n\n{fallback_msg}"
+            
         return ChatResponse(
-            message="I'm here to support you, but I had a little trouble processing your query on my local model. Make sure Ollama is running! How are your knees feeling today?",
+            message=fallback_msg,
             ui_card_type=None,
             ui_card_data=None,
             emotion_tone="warning"
