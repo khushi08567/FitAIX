@@ -246,7 +246,17 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
             raise ValueError("Ollama returned an empty response.")
             
         data = json.loads(json_content)
-        return ChatResponse(**data)
+        response_obj = ChatResponse(**data)
+        
+        if actions_taken:
+            clean_actions = []
+            for action in actions_taken:
+                clean_act = action.replace("[System Action Success: ", "").replace("]", "")
+                clean_actions.append(clean_act)
+            action_header = " | ".join(clean_actions)
+            response_obj.message = f"💬 [Action Logged: {action_header}]\n\n{response_obj.message}"
+            
+        return response_obj
         
     except Exception as e:
         logger.error(f"Error in Ollama local agent: {e}", exc_info=True)
