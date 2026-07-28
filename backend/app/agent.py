@@ -176,6 +176,38 @@ def parse_and_execute_chat_actions(user_message: str) -> List[str]:
         result = save_preferences_express(dietary_preferences=["dairy-free"], allergies=[], favorite_foods=[])
         actions_taken.append(f"[System Action Success: {result}]")
         
+    # 5. Capture Food Allergy declarations (matches exact first-letter-capitalized IDs: 'Peanuts', 'Tree Nuts', etc.)
+    if any(keyword in msg_lower for keyword in ["allerg", "avoid", "cannot eat", "can't eat", "no eggs", "no dairy", "no soy"]):
+        matched_allergies = []
+        if "peanut" in msg_lower:
+            matched_allergies.append("Peanuts")
+        if "tree nut" in msg_lower or ("nut" in msg_lower and "peanut" not in msg_lower):
+            matched_allergies.append("Tree Nuts")
+        if "dairy" in msg_lower or "milk" in msg_lower or "lactose" in msg_lower:
+            matched_allergies.append("Dairy")
+        if "egg" in msg_lower:
+            matched_allergies.append("Eggs")
+        if "soy" in msg_lower:
+            matched_allergies.append("Soy")
+        if "shellfish" in msg_lower or "shrimp" in msg_lower or "seafood" in msg_lower:
+            matched_allergies.append("Shellfish")
+        if "wheat" in msg_lower or "gluten" in msg_lower:
+            matched_allergies.append("Wheat")
+
+        if matched_allergies:
+            result = save_preferences_express(dietary_preferences=[], allergies=matched_allergies, favorite_foods=[])
+            actions_taken.append(f"[System Action Success: {result}]")
+
+    # 6. Capture Favorite Foods declarations (extracts just the foods, rather than the full sentence)
+    if any(keyword in msg_lower for keyword in ["favorite food", "i like ", "i love ", "prefer to eat"]):
+        food_match = re.search(r'(?:favorite food|i like|i love|prefer to eat)\s+(?:is|to eat)?\s*([a-zA-Z\s,]+)', msg_lower)
+        if food_match:
+            food_item = food_match.group(1).replace("only", "").replace("and", ",").strip()
+            foods = [f.strip() for f in food_item.split(",") if len(f.strip()) > 2]
+            if foods:
+                result = save_preferences_express(dietary_preferences=[], allergies=[], favorite_foods=foods)
+                actions_taken.append(f"[System Action Success: {result}]")
+
     return actions_taken
 
 
@@ -187,8 +219,8 @@ def detect_and_log_memory(user_message: str):
     """
     msg_lower = user_message.lower()
     
-    # If the user is entering a metric or command parsed in actions, skip logging it as a favorite food fact
-    if any(cmd in msg_lower for cmd in ["ml", "water", "log", "drank", "add", "change my preference", "intake", "taken"]):
+    # Filter out direct commands and allergy/preference statements
+    if any(cmd in msg_lower for cmd in ["ml", "water", "log", "drank", "add", "change my preference", "intake", "taken", "allergy", "allergic", "avoid"]):
         return
         
     personal_triggers = [

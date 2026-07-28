@@ -8,30 +8,28 @@
   "sleep_hours": 7.75,
   "recovery_score": 82,
   "calories_limit": 2200,
-  "calories_consumed": 1540,
+  "calories_consumed": 1480,
   "protein_target_g": 165,
-  "protein_consumed_g": 102,
+  "protein_consumed_g": 87,
   "carbs_consumed_g": 172,
   "fat_consumed_g": 42,
   "hydration_target_ml": 2500,
-  "hydration_consumed_ml": 2250,
+  "hydration_consumed_ml": 1750,
   "injuries": [
     "left knee patellar tendinitis (avoid deep squats or high-impact jumping)"
   ],
   "preferences": [
-    "Vegetarian",
     "high-protein",
-    "low-carb"
+    "low-carb",
+    "vegetarian"
   ],
   "allergies": [
     "peanuts"
   ],
   "user_facts": [
     "eggs",
-    "grilled chicken",
-    "i have taken 15g protein",
+    "i have a food allergy from peanuts",
     "oatmeal",
-    "i have take 500ml water",
-    "i want to change my preferences to vegetarian food only"
+    "grilled chicken"
   ]
 }
