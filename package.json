@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "nodemon server/server.js"
+    "dev": "nodemon server/server.js",
+    "seed:demo": "node scripts/seedDemoUser.js"
   },
   "keywords": [
     "password-reset",
@@ -25,7 +26,7 @@
     "express": "^4.19.2",
     "express-validator": "^7.0.1",
     "mongoose": "^8.2.0",
-    "nodemailer": "^6.9.10"
+    "nodemailer": "^9.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

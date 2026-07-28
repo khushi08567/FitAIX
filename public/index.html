@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset your password</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="card" aria-labelledby="page-title">
+        <div class="brand-mark" aria-hidden="true">⌁</div>
+        <p class="eyebrow">ACCOUNT RECOVERY</p>
+        <h1 id="page-title">Reset your password</h1>
+        <p class="intro">Enter your account email and we'll send you a six-digit verification code.</p>
+
+        <ol class="progress" aria-label="Password reset progress">
+          <li class="active"><span>1</span>Email</li>
+          <li><span>2</span>Verify</li>
+          <li><span>3</span>Reset</li>
+        </ol>
+
+        <p id="notice" class="notice" role="status" aria-live="polite"></p>
+
+        <form id="email-form" class="step-form">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+          <button type="submit">Send verification code</button>
+        </form>
+
+        <form id="otp-form" class="step-form" hidden>
+          <label for="otp">Six-digit verification code</label>
+          <input id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required />
+          <button type="submit">Verify code</button>
+          <button class="link-button" type="button" data-back="email">Use a different email</button>
+        </form>
+
+        <form id="password-form" class="step-form" hidden>
+          <label for="new-password">New password</label>
+          <input id="new-password" name="new-password" type="password" autocomplete="new-password" placeholder="Create a strong password" required />
+          <p class="hint">Use 8+ characters with uppercase, lowercase, a number, and a special character.</p>
+          <label for="confirm-password">Confirm new password</label>
+          <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" placeholder="Repeat your new password" required />
+          <button type="submit">Reset password</button>
+          <button class="link-button" type="button" data-back="otp">Use a different code</button>
+        </form>
+
+        <div id="complete" class="complete" hidden>
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <h2>Password reset complete</h2>
+          <p>Your password has been changed successfully. You can now sign in using your new password.</p>
+          <button id="restart" type="button">Reset another password</button>
+        </div>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
