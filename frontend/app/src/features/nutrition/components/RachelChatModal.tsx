@@ -281,6 +281,9 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
                 placeholder="Ask Rachel about your nutrition or training..."
                 placeholderTextColor="#666"
                 style={styles.input}
+                onSubmitEditing={handleSend}
+                returnKeyType="send"
+                blurOnSubmit={false}
               />
               <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
                 <Text style={styles.sendBtnText}>Send</Text>
