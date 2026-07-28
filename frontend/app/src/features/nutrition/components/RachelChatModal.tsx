@@ -296,16 +296,17 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    alignItems: 'flex-end',
+    paddingRight: 40,
+    paddingVertical: 20,
   },
   keyboardContainer: {
-    width: '100%',
-    maxWidth: 540,
-    height: '80%',
-    maxHeight: 700,
+    width: '90%',
+    maxWidth: 460,
+    height: '85%',
+    maxHeight: 720,
   },
   chatWindow: {
     width: '100%',
