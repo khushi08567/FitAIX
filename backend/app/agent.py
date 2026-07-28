@@ -36,8 +36,52 @@ You MUST return a JSON object matching this schema:
 {
   "message": "Friendly, conversational response paragraphs (string)",
   "ui_card_type": "WorkoutCard" | "NutritionCard" | "ComparisonCard" | null,
-  "ui_card_data": { ... matches the selected card schema ... } | null,
+  "ui_card_data": { ... card data ... } | null,
   "emotion_tone": "friendly" | "empathetic" | "celebratory" | "informative" | "warning"
+}
+
+--- CARD SCHEMAS ---
+
+If ui_card_type is "WorkoutCard", ui_card_data MUST match:
+{
+  "workout_name": "Name of the workout routine (string)",
+  "estimated_duration_mins": duration in minutes (number),
+  "calories_burned": estimated calories burned (number),
+  "exercises": [
+    {
+      "name": "Exercise name e.g. Romanian Deadlift (string)",
+      "sets": "number or range e.g. 3 (string or number)",
+      "reps": "number or range e.g. 10-12 (string or number)",
+      "notes": "safe form instruction or injury-avoidance tip e.g. keep spine neutral (string, optional)"
+    }
+  ],
+  "warnings": ["injury safety alert or knee warnings e.g. avoid squatting deep (string, optional)"]
+}
+
+If ui_card_type is "NutritionCard", ui_card_data MUST match:
+{
+  "meal_name": "Name of the meal (string)",
+  "calories": total calories (number),
+  "protein_g": protein in grams (number),
+  "carbs_g": carbs in grams (number),
+  "fats_g": fats in grams (number),
+  "ingredients": ["ingredient line 1", "ingredient line 2"],
+  "instructions": ["cooking step 1", "cooking step 2"]
+}
+
+If ui_card_type is "ComparisonCard", ui_card_data MUST match:
+{
+  "item_a": {
+    "name": "First item e.g. Squat (string)",
+    "pros": ["pro 1", "pro 2"],
+    "cons": ["con 1", "con 2"]
+  },
+  "item_b": {
+    "name": "Second item e.g. Leg Press (string)",
+    "pros": ["pro 1", "pro 2"],
+    "cons": ["con 1", "con 2"]
+  },
+  "overall_verdict": "Which is better for the user's specific context (injury/goal) and why (string)"
 }
 """
 
