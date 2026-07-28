@@ -19,15 +19,17 @@
     "left knee patellar tendinitis (avoid deep squats or high-impact jumping)"
   ],
   "preferences": [
-    "high-protein",
-    "low-carb"
+    "low-carb",
+    "vegetarian",
+    "high-protein"
   ],
   "allergies": [
     "peanuts"
   ],
   "user_facts": [
+    "eggs",
+    "i want to change my diet preference to vegetarian",
     "grilled chicken",
-    "oatmeal",
-    "eggs"
+    "oatmeal"
   ]
 }
