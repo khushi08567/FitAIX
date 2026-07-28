@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Interfaces matching backend schemas
 interface Exercise {
@@ -69,6 +70,7 @@ interface RachelChatModalProps {
 const CHAT_API_URL = 'http://localhost:8000/api/chat';
 
 export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClose }) => {
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'init-1',
@@ -114,6 +116,9 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
       if (!res.ok) throw new Error('Network error');
 
       const data = await res.json();
+      
+      // Invalidate queries to refresh dashboard charts immediately
+      queryClient.invalidateQueries();
 
       const coachMsg: Message = {
         id: `msg-${Date.now()}`,

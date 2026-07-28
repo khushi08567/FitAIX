@@ -43,16 +43,17 @@ You MUST return a JSON object matching this schema:
 
 def parse_and_execute_chat_actions(user_message: str) -> List[str]:
     """
-    Scans the user input for specific tracking triggers (like logging water or eating a meal)
-    and executes requests to the Express database server.
+    Highly robust intent-parsing that captures user tracking inputs for water, meals,
+    and preferences, and immediately performs Express API mutations.
     """
     msg_lower = user_message.lower()
     actions_taken = []
     
-    # 1. Capture Hydration (e.g., "drank 300ml water", "had 500ml", "log 250ml water")
-    water_match = re.search(r'(?:drank|log|had|add)\s+(\d+)\s*(?:ml|milliliters)?\s*(?:of\s+)?water', msg_lower)
+    # 1. Capture Hydration: Matches any combination of digits + ml/water
+    # Matches: "400ml", "400 ml", "400 ml of water", "taken 400ml", "water intake 500ml", "added 300 ml water"
+    water_match = re.search(r'(\d+)\s*(?:ml|milliliters)?\s*(?:of\s+)?water', msg_lower)
     if not water_match:
-        # Fallback search for just "XXXml"
+        # Fallback to search for just digits + "ml"
         water_match = re.search(r'(\d+)\s*ml', msg_lower)
         
     if water_match:
@@ -60,7 +61,7 @@ def parse_and_execute_chat_actions(user_message: str) -> List[str]:
         result = add_hydration_log(amount)
         actions_taken.append(f"[System Action Success: {result}]")
         
-    # 2. Capture Meal logging (matches against key database recipe keywords)
+    # 2. Capture Meal logging: Match against recipe keys
     food_items = {
         "greek yogurt bowl": {"name": "High-Protein Greek Yogurt Bowl", "calories": 280, "protein": 24, "carbs": 30, "fat": 4, "type": "snack"},
         "yogurt bowl": {"name": "High-Protein Greek Yogurt Bowl", "calories": 280, "protein": 24, "carbs": 30, "fat": 4, "type": "snack"},
@@ -111,7 +112,6 @@ def detect_and_log_memory(user_message: str):
     ]
     
     if any(trigger in msg_lower for trigger in personal_triggers):
-        # Log this statement as a profile memory fact locally
         update_user_profile_facts(user_message)
 
 
@@ -119,16 +119,10 @@ def build_prompt_with_context(user_message: str, retrieved_rag_data: List[str]) 
     """Loads user profile details and any retrieved RAG facts to compile the prompt context."""
     profile = load_user_profile()
     
-    # Format active injuries
     injuries_str = ", ".join(profile.get("injuries", [])) or "None"
-    
-    # Format preferences
     preferences_str = ", ".join(profile.get("preferences", [])) or "None"
-    
-    # Format long term facts
     facts_str = ", ".join(profile.get("user_facts", [])) or "None"
     
-    # Dynamic fields from Express
     calories_consumed = profile.get("calories_consumed", 0)
     calories_limit = profile.get("calories_limit", 2000)
     calories_remaining = max(0, calories_limit - calories_consumed)
@@ -187,19 +181,16 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
     
     # 3. Retrieve exercise or meal context if relevant keyword is found
     retrieved_data = []
-    # Feed action results back as system logs so LLM knows it succeeded
     retrieved_data.extend(actions_taken)
     
     msg_lower = user_message.lower()
     
-    # Simple keywords for exercise library lookup
     exercise_keywords = ["workout", "exercise", "squat", "press", "deadlift", "bridge", "form", "reps", "sets", "knee"]
     if any(kw in msg_lower for kw in exercise_keywords):
         exercises = search_exercises_db(user_message)
         if exercises:
             retrieved_data.append(f"Exercise Guide context: {json.dumps(exercises)}")
             
-    # Simple keywords for meal library lookup
     nutrition_keywords = ["recipe", "eat", "meal", "food", "calorie", "protein", "yogurt", "carb", "shake", "tofu"]
     if any(kw in msg_lower for kw in nutrition_keywords):
         meals = search_meals_db(user_message)
@@ -225,37 +216,40 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
                 
     messages.append({"role": "user", "content": prompt})
     
+    # Speed & latency options to execute faster
+    ollama_options = {
+        "temperature": 0.3,     # Lower temperature is faster
+        "num_predict": 180,     # Limit token length to guarantee quick replies
+        "num_ctx": 2048         # Keep context limit compact to fit in graphics RAM/CPU memory
+    }
+    
     try:
-        # Initialize the Ollama Client
         client = ollama.Client(host=settings.ollama_host)
         
-        # 6. Call local Ollama chat API enforcing JSON output
         try:
-            # Attempt to use JSON schema validation if supported
             response = client.chat(
                 model=settings.ollama_model,
                 messages=messages,
-                format=ChatResponse.model_json_schema()
+                format=ChatResponse.model_json_schema(),
+                options=ollama_options
             )
         except Exception:
-            # Fallback to standard JSON format flag
             response = client.chat(
                 model=settings.ollama_model,
                 messages=messages,
-                format="json"
+                format="json",
+                options=ollama_options
             )
             
         json_content = response["message"]["content"]
         if not json_content:
             raise ValueError("Ollama returned an empty response.")
             
-        # Parse output JSON into structured ChatResponse
         data = json.loads(json_content)
         return ChatResponse(**data)
         
     except Exception as e:
         logger.error(f"Error in Ollama local agent: {e}", exc_info=True)
-        # Graceful fallback response
         return ChatResponse(
             message="I'm here to support you, but I had a little trouble processing your query on my local model. Make sure Ollama is running! How are your knees feeling today?",
             ui_card_type=None,
