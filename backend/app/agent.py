@@ -50,7 +50,6 @@ def parse_and_execute_chat_actions(user_message: str) -> List[str]:
     actions_taken = []
     
     # 1. Capture Hydration: Matches any combination of digits + ml/water
-    # Matches: "400ml", "400 ml", "400 ml of water", "taken 400ml", "water intake 500ml", "added 300 ml water"
     water_match = re.search(r'(\d+)\s*(?:ml|milliliters)?\s*(?:of\s+)?water', msg_lower)
     if not water_match:
         # Fallback to search for just digits + "ml"
@@ -148,15 +147,33 @@ def parse_and_execute_chat_actions(user_message: str) -> List[str]:
             )
             actions_taken.append(f"[System Action Success: {result}]")
             
-    # 4. Capture Food Preference selections
+    # 4. Capture Food Preference selections (using exact lowercase/hyphenated IDs matching front-end options)
     if "vegetarian" in msg_lower:
-        result = save_preferences_express(dietary_preferences=["Vegetarian"], allergies=[], favorite_foods=[])
+        result = save_preferences_express(dietary_preferences=["vegetarian"], allergies=[], favorite_foods=[])
         actions_taken.append(f"[System Action Success: {result}]")
     elif "vegan" in msg_lower:
-        result = save_preferences_express(dietary_preferences=["Vegan"], allergies=[], favorite_foods=[])
+        result = save_preferences_express(dietary_preferences=["vegan"], allergies=[], favorite_foods=[])
         actions_taken.append(f"[System Action Success: {result}]")
-    elif "allergic to peanut" in msg_lower or "peanut allergy" in msg_lower:
-        result = save_preferences_express(dietary_preferences=[], allergies=["Peanuts"], favorite_foods=[])
+    elif "halal" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["halal"], allergies=[], favorite_foods=[])
+        actions_taken.append(f"[System Action Success: {result}]")
+    elif "jain" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["jain"], allergies=[], favorite_foods=[])
+        actions_taken.append(f"[System Action Success: {result}]")
+    elif "high protein" in msg_lower or "high-protein" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["high-protein"], allergies=[], favorite_foods=[])
+        actions_taken.append(f"[System Action Success: {result}]")
+    elif "low carb" in msg_lower or "low-carb" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["low-carb"], allergies=[], favorite_foods=[])
+        actions_taken.append(f"[System Action Success: {result}]")
+    elif "keto" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["keto"], allergies=[], favorite_foods=[])
+        actions_taken.append(f"[System Action Success: {result}]")
+    elif "gluten free" in msg_lower or "gluten-free" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["gluten-free"], allergies=[], favorite_foods=[])
+        actions_taken.append(f"[System Action Success: {result}]")
+    elif "dairy free" in msg_lower or "dairy-free" in msg_lower:
+        result = save_preferences_express(dietary_preferences=["dairy-free"], allergies=[], favorite_foods=[])
         actions_taken.append(f"[System Action Success: {result}]")
         
     return actions_taken
@@ -166,9 +183,14 @@ def detect_and_log_memory(user_message: str):
     """
     Heuristically checks if the user is sharing personal constraints, goals, or pain levels,
     and logs them permanently to user_profile.json and updates remote Express preferences.
+    Filters out direct command statements to avoid polluting the Favorite Foods list.
     """
     msg_lower = user_message.lower()
     
+    # If the user is entering a metric or command parsed in actions, skip logging it as a favorite food fact
+    if any(cmd in msg_lower for cmd in ["ml", "water", "log", "drank", "add", "change my preference", "intake", "taken"]):
+        return
+        
     personal_triggers = [
         "i am ", "i have ", "i prefer ", "i hate ", "i like ", 
         "my knee", "my shoulder", "my back", "pain", "sore", 

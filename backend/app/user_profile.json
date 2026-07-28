@@ -14,11 +14,12 @@
   "carbs_consumed_g": 172,
   "fat_consumed_g": 42,
   "hydration_target_ml": 2500,
-  "hydration_consumed_ml": 1750,
+  "hydration_consumed_ml": 2250,
   "injuries": [
     "left knee patellar tendinitis (avoid deep squats or high-impact jumping)"
   ],
   "preferences": [
+    "Vegetarian",
     "high-protein",
     "low-carb"
   ],
@@ -28,7 +29,9 @@
   "user_facts": [
     "eggs",
     "grilled chicken",
+    "i have taken 15g protein",
     "oatmeal",
-    "i have taken 15g protein"
+    "i have take 500ml water",
+    "i want to change my preferences to vegetarian food only"
   ]
 }
