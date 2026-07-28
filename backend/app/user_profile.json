@@ -8,27 +8,27 @@
   "sleep_hours": 7.75,
   "recovery_score": 82,
   "calories_limit": 2200,
-  "calories_consumed": 1480,
+  "calories_consumed": 1540,
   "protein_target_g": 165,
-  "protein_consumed_g": 87,
+  "protein_consumed_g": 102,
   "carbs_consumed_g": 172,
   "fat_consumed_g": 42,
   "hydration_target_ml": 2500,
-  "hydration_consumed_ml": 2250,
+  "hydration_consumed_ml": 1750,
   "injuries": [
     "left knee patellar tendinitis (avoid deep squats or high-impact jumping)"
   ],
   "preferences": [
-    "low-carb",
-    "high-protein"
+    "high-protein",
+    "low-carb"
   ],
   "allergies": [
     "peanuts"
   ],
   "user_facts": [
-    "oatmeal",
-    "grilled chicken",
     "eggs",
+    "grilled chicken",
+    "oatmeal",
     "i have taken 15g protein"
   ]
 }

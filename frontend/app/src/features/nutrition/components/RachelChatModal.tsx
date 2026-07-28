@@ -226,95 +226,95 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
     return null;
   };
 
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} animationType="fade" transparent>
-      <View style={styles.modalOverlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardContainer}
-        >
-          <View style={styles.chatWindow}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerTitleContainer}>
-                <View style={styles.avatarGlow}>
-                  <Text style={styles.avatarText}>🤖</Text>
+    <View style={styles.absoluteChatWindow}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardContainer}
+      >
+        <View style={styles.chatWindow}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerTitleContainer}>
+              <View style={styles.avatarGlow}>
+                <Text style={styles.avatarText}>🤖</Text>
+              </View>
+              <View style={{ marginLeft: 10 }}>
+                <Text style={styles.title}>Rachel</Text>
+                <Text style={styles.status}>AI Health & Performance Coach</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Text style={styles.closeBtnText}>×</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Chats */}
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={{ paddingVertical: 16 }}
+          >
+            {messages.map(msg => {
+              const isUser = msg.sender === 'user';
+              return (
+                <View key={msg.id} style={[styles.msgRow, isUser ? styles.msgRowUser : styles.msgRowCoach]}>
+                  <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleCoach]}>
+                    <Text style={styles.bubbleText}>{msg.text}</Text>
+                    {msg.ui_card_type && msg.ui_card_data && renderCard(msg.ui_card_type, msg.ui_card_data)}
+                    <Text style={styles.timeText}>{msg.time}</Text>
+                  </View>
                 </View>
-                <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.title}>Rachel</Text>
-                  <Text style={styles.status}>AI Health & Performance Coach</Text>
+              );
+            })}
+
+            {isThinking && (
+              <View style={[styles.msgRow, styles.msgRowCoach]}>
+                <View style={[styles.bubble, styles.bubbleCoach, styles.thinkingBubble]}>
+                  <ActivityIndicator size="small" color="#FFD60A" />
                 </View>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <Text style={styles.closeBtnText}>×</Text>
-              </TouchableOpacity>
-            </View>
+            )}
+          </ScrollView>
 
-            {/* Chats */}
-            <ScrollView
-              ref={scrollViewRef}
-              style={styles.messagesContainer}
-              contentContainerStyle={{ paddingVertical: 16 }}
-            >
-              {messages.map(msg => {
-                const isUser = msg.sender === 'user';
-                return (
-                  <View key={msg.id} style={[styles.msgRow, isUser ? styles.msgRowUser : styles.msgRowCoach]}>
-                    <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleCoach]}>
-                      <Text style={styles.bubbleText}>{msg.text}</Text>
-                      {msg.ui_card_type && msg.ui_card_data && renderCard(msg.ui_card_type, msg.ui_card_data)}
-                      <Text style={styles.timeText}>{msg.time}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-
-              {isThinking && (
-                <View style={[styles.msgRow, styles.msgRowCoach]}>
-                  <View style={[styles.bubble, styles.bubbleCoach, styles.thinkingBubble]}>
-                    <ActivityIndicator size="small" color="#FFD60A" />
-                  </View>
-                </View>
-              )}
-            </ScrollView>
-
-            {/* Input Form */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                value={inputVal}
-                onChangeText={setInputVal}
-                placeholder="Ask Rachel about your nutrition or training..."
-                placeholderTextColor="#666"
-                style={styles.input}
-                onSubmitEditing={handleSend}
-                returnKeyType="send"
-                blurOnSubmit={false}
-              />
-              <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
-                <Text style={styles.sendBtnText}>Send</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Input Form */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={inputVal}
+              onChangeText={setInputVal}
+              placeholder="Ask Rachel about your nutrition or training..."
+              placeholderTextColor="#666"
+              style={styles.input}
+              onSubmitEditing={handleSend}
+              returnKeyType="send"
+              blurOnSubmit={false}
+            />
+            <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
+              <Text style={styles.sendBtnText}>Send</Text>
+            </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
+        </View>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 40,
-    paddingVertical: 20,
-  },
-  keyboardContainer: {
+  absoluteChatWindow: {
+    position: 'absolute',
+    bottom: 160,
+    right: 20,
     width: '90%',
     maxWidth: 460,
-    height: '85%',
-    maxHeight: 720,
+    height: '70%',
+    maxHeight: 620,
+    zIndex: 9999,
+  },
+  keyboardContainer: {
+    width: '100%',
+    height: '100%',
   },
   chatWindow: {
     width: '100%',
