@@ -775,7 +775,7 @@ export default function App() {
     return replyText;
   };
 
-  const handleCoachInputSubmit = (e) => {
+  const handleCoachInputSubmit = async (e) => {
     if (e) e.preventDefault();
     const userText = coachInputText.trim();
     if (!userText) return;
@@ -786,6 +786,7 @@ export default function App() {
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg = { id: `msg-${Date.now()}`, sender: "user", text: userText, time: timestamp };
     
+    // Append user message immediately
     setCoachChatHistories(prev => ({
       ...prev,
       [selectedUser]: [...(prev[selectedUser] || []), userMsg]
@@ -793,13 +794,56 @@ export default function App() {
 
     setIsCoachThinking(true);
 
-    setTimeout(() => {
+    try {
+      // Map history to backend format
+      const historyPayload = (coachChatHistories[selectedUser] || []).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        text: msg.text
+      }));
+
+      const res = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: userText,
+          history: historyPayload
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Backend connection failed");
+      }
+
+      const responseData = await res.json();
+
+      const coachReplyMsg = { 
+        id: `msg-${Date.now()}`, 
+        sender: "coach", 
+        text: responseData.message, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        ui_card_type: responseData.ui_card_type,
+        ui_card_data: responseData.ui_card_data,
+        emotion_tone: responseData.emotion_tone
+      };
+
+      setCoachChatHistories(prev => ({
+        ...prev,
+        [selectedUser]: [...(prev[selectedUser] || []), coachReplyMsg]
+      }));
+
+      setIsCoachThinking(false);
+      speakText(responseData.message);
+
+    } catch (err) {
+      console.error("Local LLM Offline, falling back to simulator:", err);
       const replyText = getResponseAndExecuteActions(userText);
 
       const coachReplyMsg = { 
         id: `msg-${Date.now()}`, 
         sender: "coach", 
-        text: replyText, 
+        text: replyText + " (Local LLM Offline)", 
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
       };
 
@@ -810,11 +854,11 @@ export default function App() {
 
       setIsCoachThinking(false);
       speakText(replyText);
-    }, 1500);
+    }
   };
 
   // Handle Quick Reply chips click
-  const handleQuickReplyClick = (label, text) => {
+  const handleQuickReplyClick = async (label, text) => {
     stopSpeaking();
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg = { id: `msg-${Date.now()}`, sender: "user", text: text, time: timestamp };
@@ -825,14 +869,57 @@ export default function App() {
     }));
     
     setIsCoachThinking(true);
+    setCoachInputText('');
     
-    setTimeout(() => {
+    try {
+      const historyPayload = (coachChatHistories[selectedUser] || []).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        text: msg.text
+      }));
+
+      const res = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: text,
+          history: historyPayload
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Backend connection failed");
+      }
+
+      const responseData = await res.json();
+
+      const coachReplyMsg = { 
+        id: `msg-${Date.now()}`, 
+        sender: "coach", 
+        text: responseData.message, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        ui_card_type: responseData.ui_card_type,
+        ui_card_data: responseData.ui_card_data,
+        emotion_tone: responseData.emotion_tone
+      };
+
+      setCoachChatHistories(prev => ({
+        ...prev,
+        [selectedUser]: [...(prev[selectedUser] || []), coachReplyMsg]
+      }));
+
+      setIsCoachThinking(false);
+      speakText(responseData.message);
+
+    } catch (err) {
+      console.error("Local LLM Offline, falling back to simulator:", err);
       const replyText = getResponseAndExecuteActions(text);
       
       const coachReplyMsg = { 
         id: `msg-${Date.now()}`, 
         sender: "coach", 
-        text: replyText, 
+        text: replyText + " (Local LLM Offline)", 
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
       };
 
@@ -843,9 +930,7 @@ export default function App() {
 
       setIsCoachThinking(false);
       speakText(replyText);
-    }, 1500);
-
-    setCoachInputText('');
+    }
   };
 
   // Recharts custom values over time for Recovery Line Chart
@@ -2631,6 +2716,119 @@ export default function App() {
                     title={!isUser ? "Click message to mute audio" : ""}
                   >
                     <p>{msg.text}</p>
+                    
+                    {/* Visual Card Renderer */}
+                    {msg.ui_card_type && msg.ui_card_data && (
+                      <div className="mt-3 border-t border-solid border-white/10 pt-3 space-y-3 text-[11px] font-sans">
+                        
+                        {/* Workout Card */}
+                        {msg.ui_card_type === 'WorkoutCard' && (
+                          <div className="bg-black/30 border border-solid border-white/5 p-3 rounded-xl flex flex-col gap-2">
+                            <div className="flex justify-between items-start border-b border-white/5 pb-2">
+                              <span className="font-semibold text-fitviolet uppercase tracking-wider text-[9.5px]">🏋️ Workout: {msg.ui_card_data.workout_name}</span>
+                              <span className="text-[9px] text-fittextdim">{msg.ui_card_data.estimated_duration_mins}m | {msg.ui_card_data.calories_burned} kcal</span>
+                            </div>
+                            <div className="space-y-2">
+                              {(msg.ui_card_data.exercises || []).map((ex, idx) => (
+                                <div key={idx} className="flex flex-col gap-0.5">
+                                  <div className="flex justify-between font-medium text-slate-100">
+                                    <span>{ex.name}</span>
+                                    <span className="text-fitteal font-mono">{ex.sets}x{ex.reps}</span>
+                                  </div>
+                                  {ex.notes && <span className="text-[10px] text-fittextdim leading-relaxed">{ex.notes}</span>}
+                                </div>
+                              ))}
+                            </div>
+                            {msg.ui_card_data.warnings && msg.ui_card_data.warnings.length > 0 && (
+                              <div className="border-t border-white/5 pt-2 mt-1 space-y-1">
+                                {msg.ui_card_data.warnings.map((warn, wIdx) => (
+                                  <div key={wIdx} className="text-[10px] text-fitrose flex gap-1 items-start">
+                                    <span>⚠️</span>
+                                    <span>{warn}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Nutrition Card */}
+                        {msg.ui_card_type === 'NutritionCard' && (
+                          <div className="bg-black/30 border border-solid border-white/5 p-3 rounded-xl flex flex-col gap-2">
+                            <div className="flex flex-col border-b border-white/5 pb-2">
+                              <span className="font-semibold text-fitlime uppercase tracking-wider text-[9.5px]">🥗 Meal: {msg.ui_card_data.meal_name}</span>
+                              <div className="flex gap-3 text-[9px] text-fittextdim mt-1 font-mono">
+                                <span>🔥 {msg.ui_card_data.calories} kcal</span>
+                                <span>🥩 P: {msg.ui_card_data.protein_g}g</span>
+                                <span>🌾 C: {msg.ui_card_data.carbs_g}g</span>
+                                <span>🥑 F: {msg.ui_card_data.fats_g}g</span>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-[9px] font-mono uppercase tracking-wider text-fittextdim block mb-1">Ingredients:</span>
+                              <ul className="list-disc list-inside space-y-0.5 text-slate-200 pl-1">
+                                {(msg.ui_card_data.ingredients || []).map((ing, idx) => (
+                                  <li key={idx} className="truncate">{ing}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            {msg.ui_card_data.instructions && msg.ui_card_data.instructions.length > 0 && (
+                              <div className="border-t border-white/5 pt-2 mt-1">
+                                <span className="text-[9px] font-mono uppercase tracking-wider text-fittextdim block mb-1">Preparation:</span>
+                                <ol className="list-decimal list-inside space-y-1 text-slate-300 pl-1 leading-normal">
+                                  {msg.ui_card_data.instructions.map((step, idx) => (
+                                    <li key={idx} className="text-[10px]">{step}</li>
+                                  ))}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Comparison Card */}
+                        {msg.ui_card_type === 'ComparisonCard' && (
+                          <div className="bg-black/30 border border-solid border-white/5 p-3 rounded-xl flex flex-col gap-2.5">
+                            <span className="font-semibold text-fitgold uppercase tracking-wider text-[9.5px] border-b border-white/5 pb-2">⚖️ Comparison: {msg.ui_card_data.title}</span>
+                            
+                            <div className="grid grid-cols-2 gap-3 text-[10px]">
+                              <div className="flex flex-col gap-1.5 bg-white/3 p-2 rounded-lg border border-solid border-white/5">
+                                <span className="font-semibold text-slate-100 uppercase text-[9px]">{msg.ui_card_data.item_a.name}</span>
+                                <div className="space-y-1">
+                                  {msg.ui_card_data.item_a.pros.slice(0, 2).map((pro, idx) => (
+                                    <div key={idx} className="text-fitlime text-[9px]">👍 {pro}</div>
+                                  ))}
+                                  {msg.ui_card_data.item_a.cons.slice(0, 2).map((con, idx) => (
+                                    <div key={idx} className="text-fitrose text-[9px]">👎 {con}</div>
+                                  ))}
+                                </div>
+                                <span className="text-[9px] text-fittextdim italic mt-1 leading-snug">Verdict: {msg.ui_card_data.item_a.verdict}</span>
+                              </div>
+
+                              <div className="flex flex-col gap-1.5 bg-white/3 p-2 rounded-lg border border-solid border-white/5">
+                                <span className="font-semibold text-slate-100 uppercase text-[9px]">{msg.ui_card_data.item_b.name}</span>
+                                <div className="space-y-1">
+                                  {msg.ui_card_data.item_b.pros.slice(0, 2).map((pro, idx) => (
+                                    <div key={idx} className="text-fitlime text-[9px]">👍 {pro}</div>
+                                  ))}
+                                  {msg.ui_card_data.item_b.cons.slice(0, 2).map((con, idx) => (
+                                    <div key={idx} className="text-fitrose text-[9px]">👎 {con}</div>
+                                  ))}
+                                </div>
+                                <span className="text-[9px] text-fittextdim italic mt-1 leading-snug">Verdict: {msg.ui_card_data.item_b.verdict}</span>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-white/5 pt-2 mt-1">
+                              <span className="text-[9px] font-mono uppercase tracking-wider text-fittextdim block mb-1">Recommendation:</span>
+                              <p className="text-[10px] text-slate-200 leading-normal italic">"{msg.ui_card_data.overall_verdict}"</p>
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+                    )}
                     
                     {/* Inline Widget/Chips inside chat bubble */}
                     {!isUser && (
