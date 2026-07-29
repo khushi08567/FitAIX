@@ -406,7 +406,7 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
     # Tuned generation settings to optimize processing latency on local CPU/GPU hardware
     ollama_options = {
         "temperature": 0.3,
-        "num_predict": 250,
+        "num_predict": 750,
         "num_ctx": 1536
     }
     
