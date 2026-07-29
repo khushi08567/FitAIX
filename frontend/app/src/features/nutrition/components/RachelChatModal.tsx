@@ -12,6 +12,7 @@ import {
   Platform
 } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import { Audio } from 'expo-av';
 
 // Interfaces matching backend schemas
 interface Exercise {
@@ -83,11 +84,24 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
   const [isThinking, setIsThinking] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Audio recording and playback states
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const soundRef = useRef<Audio.Sound | null>(null);
+
   useEffect(() => {
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollToEnd({ animated: true });
     }
   }, [messages, isThinking]);
+
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync().catch(err => console.warn("Audio cleanup error:", err));
+      }
+    };
+  }, []);
 
   const handleSend = async () => {
     const text = inputVal.trim();
@@ -139,6 +153,152 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, offlineMsg]);
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
+  const playVoiceAudio = async (base64AudioUrl: string) => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+      }
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: base64AudioUrl },
+        { shouldPlay: true }
+      );
+      soundRef.current = sound;
+    } catch (err) {
+      console.error('Failed to play sound:', err);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') {
+        alert('Microphone permission is required to record voice notes!');
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync({
+        android: {
+          extension: '.wav',
+          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+          audioEncoder: Audio.AndroidAudioEncoder.AAC,
+          sampleRate: 16000,
+          numberOfChannels: 1,
+          bitRate: 128000,
+        },
+        ios: {
+          extension: '.wav',
+          audioQuality: Audio.IOSAudioQuality.HIGH,
+          sampleRate: 16000,
+          numberOfChannels: 1,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        web: {
+          mimeType: 'audio/wav',
+          bitsPerSecond: 128000,
+        },
+      });
+      setRecording(recording);
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+    setIsRecording(false);
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+      if (uri) {
+        await sendVoiceMessage(uri);
+      }
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+    }
+  };
+
+  const sendVoiceMessage = async (audioUri: string) => {
+    setIsThinking(true);
+    const userMsgId = `voice-msg-${Date.now()}`;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg: Message = {
+      id: userMsgId,
+      sender: 'user',
+      text: '🎤 Sending voice message...',
+      time,
+    };
+    setMessages(prev => [...prev, userMsg]);
+
+    try {
+      const formData = new FormData();
+      
+      const responseBlob = await fetch(audioUri);
+      const blob = await responseBlob.blob();
+      
+      formData.append('audio', blob, 'voice.wav');
+      
+      const historyPayload = messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        text: msg.text
+      }));
+      formData.append('history', JSON.stringify(historyPayload));
+
+      const res = await fetch('http://localhost:8000/api/chat/voice', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Speech process error');
+
+      const data = await res.json();
+      
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === userMsgId ? { ...m, text: `🎤 ${data.user_transcribed_text}` } : m
+        )
+      );
+
+      queryClient.invalidateQueries();
+
+      const coachMsg: Message = {
+        id: `msg-${Date.now()}`,
+        sender: 'coach',
+        text: data.message,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        ui_card_type: data.ui_card_type,
+        ui_card_data: data.ui_card_data
+      };
+
+      setMessages(prev => [...prev, coachMsg]);
+
+      if (data.voice_audio) {
+        await playVoiceAudio(data.voice_audio);
+      }
+    } catch (err) {
+      console.error('Voice send error:', err);
+      setMessages(prev => prev.filter(m => m.id !== userMsgId));
+      const errorMsg: Message = {
+        id: `msg-${Date.now()}`,
+        sender: 'coach',
+        text: "I couldn't process your voice note. Make sure you speak clearly and allowed microphone access!",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsThinking(false);
     }
@@ -281,17 +441,26 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
 
           {/* Input Form */}
           <View style={styles.inputContainer}>
+            <TouchableOpacity
+              onPressIn={startRecording}
+              onPressOut={stopRecording}
+              style={[styles.micBtn, isRecording && styles.micBtnActive]}
+            >
+              <Text style={styles.micBtnText}>{isRecording ? '🔴' : '🎤'}</Text>
+            </TouchableOpacity>
+
             <TextInput
               value={inputVal}
               onChangeText={setInputVal}
-              placeholder="Ask Rachel about your nutrition or training..."
+              placeholder={isRecording ? "Listening to your voice..." : "Ask Rachel about your nutrition or training..."}
               placeholderTextColor="#666"
               style={styles.input}
               onSubmitEditing={handleSend}
               returnKeyType="send"
               blurOnSubmit={false}
+              editable={!isRecording}
             />
-            <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
+            <TouchableOpacity onPress={handleSend} style={styles.sendBtn} disabled={isRecording}>
               <Text style={styles.sendBtnText}>Send</Text>
             </TouchableOpacity>
           </View>
@@ -446,6 +615,24 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 13,
     marginRight: 8,
+  },
+  micBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#1E1D1A',
+    borderWidth: 1,
+    borderColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  micBtnActive: {
+    backgroundColor: '#FF3B30',
+    borderColor: '#FF3B30',
+  },
+  micBtnText: {
+    fontSize: 16,
   },
   sendBtn: {
     backgroundColor: '#FFD60A',
