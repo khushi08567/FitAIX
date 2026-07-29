@@ -225,6 +225,11 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
         webAudioContextRef.current = audioCtx;
         
+        // Ensure AudioContext is active and not suspended by the browser
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
+        
         const source = audioCtx.createMediaStreamSource(stream);
         const processor = audioCtx.createScriptProcessor(4096, 1, 1);
         webProcessorRef.current = processor;
@@ -304,10 +309,18 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
         }
         
         const buffers = webBuffersRef.current;
+        console.log("Stopped web recording. Buffers count:", buffers.length);
+        
         let totalLength = 0;
         for (const buf of buffers) {
           totalLength += buf.length;
         }
+        console.log("Total samples recorded:", totalLength);
+        
+        if (totalLength === 0) {
+          console.warn("Recorded audio is empty. Ensure microphone input is active.");
+        }
+        
         const flatSamples = new Float32Array(totalLength);
         let offset = 0;
         for (const buf of buffers) {
