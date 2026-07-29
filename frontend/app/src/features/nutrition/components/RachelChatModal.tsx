@@ -70,6 +70,43 @@ interface RachelChatModalProps {
 
 const CHAT_API_URL = 'http://localhost:8000/api/chat';
 
+// Helpers for encoding raw PCM samples to a 16-bit Mono WAV file in the browser
+function writeString(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+function floatTo16BitPCM(view: DataView, offset: number, input: Float32Array) {
+  for (let i = 0; i < input.length; i++, offset += 2) {
+    let s = Math.max(-1, Math.min(1, input[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+}
+
+function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  floatTo16BitPCM(view, 44, samples);
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
 export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClose }) => {
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([
@@ -88,6 +125,12 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
+
+  // Web Audio Recording Refs
+  const webAudioContextRef = useRef<any>(null);
+  const webStreamRef = useRef<any>(null);
+  const webProcessorRef = useRef<any>(null);
+  const webBuffersRef = useRef<Float32Array[]>([]);
 
   useEffect(() => {
     if (scrollViewRef.current) {
@@ -175,6 +218,31 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
 
   const startRecording = async () => {
     try {
+      if (Platform.OS === 'web') {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        webStreamRef.current = stream;
+        
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+        webAudioContextRef.current = audioCtx;
+        
+        const source = audioCtx.createMediaStreamSource(stream);
+        const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+        webProcessorRef.current = processor;
+        
+        webBuffersRef.current = [];
+        
+        processor.onaudioprocess = (e) => {
+          const inputData = e.inputBuffer.getChannelData(0);
+          webBuffersRef.current.push(new Float32Array(inputData));
+        };
+        
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+        
+        setIsRecording(true);
+        return;
+      }
+
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== 'granted') {
         alert('Microphone permission is required to record voice notes!');
@@ -218,8 +286,46 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
   };
 
   const stopRecording = async () => {
-    if (!recording) return;
     setIsRecording(false);
+    
+    if (Platform.OS === 'web') {
+      try {
+        if (webProcessorRef.current) {
+          webProcessorRef.current.disconnect();
+          webProcessorRef.current = null;
+        }
+        if (webAudioContextRef.current) {
+          await webAudioContextRef.current.close();
+          webAudioContextRef.current = null;
+        }
+        if (webStreamRef.current) {
+          webStreamRef.current.getTracks().forEach((track: any) => track.stop());
+          webStreamRef.current = null;
+        }
+        
+        const buffers = webBuffersRef.current;
+        let totalLength = 0;
+        for (const buf of buffers) {
+          totalLength += buf.length;
+        }
+        const flatSamples = new Float32Array(totalLength);
+        let offset = 0;
+        for (const buf of buffers) {
+          flatSamples.set(buf, offset);
+          offset += buf.length;
+        }
+        
+        const wavBlob = encodeWAV(flatSamples, 16000);
+        const wavUrl = URL.createObjectURL(wavBlob);
+        
+        await sendVoiceMessage(wavUrl);
+      } catch (err) {
+        console.error('Failed to stop web recording', err);
+      }
+      return;
+    }
+
+    if (!recording) return;
     try {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
