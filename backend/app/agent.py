@@ -412,50 +412,48 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
     }
     
     json_content = ""
-    
-    # 6. Check if Gemini API key is configured for fast, instantaneous cloud-based responses
-    if settings.gemini_api_key:
-        try:
-            logger.info("Using cloud-based Google Gemini API for fast, instantaneous response.")
-            genai.configure(api_key=settings.gemini_api_key)
-            
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            gemini_contents = []
-            if history:
-                for msg in history:
-                    role = "user" if msg.get("role") == "user" else "model"
-                    text = msg.get("text")
-                    if text:
-                        gemini_contents.append({
-                            "role": role,
-                            "parts": [text]
-                        })
-            
-            gemini_contents.append({
-                "role": "user",
-                "parts": [prompt]
-            })
-            
-            response = model.generate_content(
-                gemini_contents,
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3
-                ),
-                system_instruction=SYSTEM_INSTRUCTION
-            )
-            
-            json_content = response.text
-            logger.info("Successfully received response from Gemini API.")
-        except Exception as gemini_err:
-            logger.error(f"Gemini API generation failed, falling back to local Ollama: {gemini_err}")
-            json_content = ""
-            
-    if not json_content:
-        try:
+    try:
+        # 6. Check if Gemini API key is configured for fast, instantaneous cloud-based responses
+        if settings.gemini_api_key:
+            try:
+                logger.info("Using cloud-based Google Gemini API for fast, instantaneous response.")
+                genai.configure(api_key=settings.gemini_api_key)
+                
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                gemini_contents = []
+                if history:
+                    for msg in history:
+                        role = "user" if msg.get("role") == "user" else "model"
+                        text = msg.get("text")
+                        if text:
+                            gemini_contents.append({
+                                "role": role,
+                                "parts": [text]
+                            })
+                
+                gemini_contents.append({
+                    "role": "user",
+                    "parts": [prompt]
+                })
+                
+                response = model.generate_content(
+                    gemini_contents,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.3
+                    ),
+                    system_instruction=SYSTEM_INSTRUCTION
+                )
+                
+                json_content = response.text
+                logger.info("Successfully received response from Gemini API.")
+            except Exception as gemini_err:
+                logger.error(f"Gemini API generation failed, falling back to local Ollama: {gemini_err}")
+                json_content = ""
+                
+        if not json_content:
             client = ollama.Client(host=settings.ollama_host)
-            
             try:
                 response = client.chat(
                     model=settings.ollama_model,
@@ -463,17 +461,17 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
                     format=ChatResponse.model_json_schema(),
                     options=ollama_options
                 )
-        except Exception:
-            response = client.chat(
-                model=settings.ollama_model,
-                messages=messages,
-                format="json",
-                options=ollama_options
-            )
+            except Exception:
+                response = client.chat(
+                    model=settings.ollama_model,
+                    messages=messages,
+                    format="json",
+                    options=ollama_options
+                )
+            json_content = response["message"]["content"]
             
-        json_content = response["message"]["content"]
         if not json_content:
-            raise ValueError("Ollama returned an empty response.")
+            raise ValueError("LLM returned an empty response.")
             
         # Clean and parse JSON
         repaired_json = clean_and_repair_json(json_content)
@@ -492,7 +490,7 @@ def run_chat_agent(user_message: str, history: List[Dict[str, Any]] = None) -> C
         return response_obj
         
     except Exception as e:
-        logger.error(f"Error in Ollama local agent: {e}", exc_info=True)
+        logger.error(f"Error in Ollama/Gemini agent: {e}", exc_info=True)
         
         # Parse fallback content
         fallback_msg = "Here is a safe, knee-friendly lower body routine for today, focusing on glute and hamstring strengthening to support recovery from patellar tendinitis!"
