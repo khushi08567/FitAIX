@@ -132,6 +132,30 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
   const webProcessorRef = useRef<any>(null);
   const webBuffersRef = useRef<Float32Array[]>([]);
 
+  // Equalizer animation states
+  const [equalizerHeights, setEqualizerHeights] = useState([12, 6, 18, 9, 15]);
+  const [dotOpacity, setDotOpacity] = useState(1);
+
+  useEffect(() => {
+    let interval: any;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setEqualizerHeights([
+          Math.floor(Math.random() * 20) + 4,
+          Math.floor(Math.random() * 20) + 4,
+          Math.floor(Math.random() * 20) + 4,
+          Math.floor(Math.random() * 20) + 4,
+          Math.floor(Math.random() * 20) + 4,
+        ]);
+        setDotOpacity(prev => (prev === 1 ? 0.3 : 1));
+      }, 150);
+    } else {
+      setEqualizerHeights([12, 6, 18, 9, 15]);
+      setDotOpacity(1);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
   useEffect(() => {
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollToEnd({ animated: true });
@@ -561,24 +585,42 @@ export const RachelChatModal: React.FC<RachelChatModalProps> = ({ visible, onClo
           {/* Input Form */}
           <View style={styles.inputContainer}>
             <TouchableOpacity
-              onPressIn={startRecording}
-              onPressOut={stopRecording}
+              onPress={() => {
+                if (isRecording) {
+                  stopRecording();
+                } else {
+                  startRecording();
+                }
+              }}
               style={[styles.micBtn, isRecording && styles.micBtnActive]}
             >
               <Text style={styles.micBtnText}>{isRecording ? '🔴' : '🎤'}</Text>
             </TouchableOpacity>
 
-            <TextInput
-              value={inputVal}
-              onChangeText={setInputVal}
-              placeholder={isRecording ? "Listening to your voice..." : "Ask Rachel about your nutrition or training..."}
-              placeholderTextColor="#666"
-              style={styles.input}
-              onSubmitEditing={handleSend}
-              returnKeyType="send"
-              blurOnSubmit={false}
-              editable={!isRecording}
-            />
+            {isRecording ? (
+              <View style={styles.recordingInputOverlay}>
+                <View style={[styles.recordingDot, { opacity: dotOpacity }]} />
+                <Text style={styles.recordingText}>Listening to your voice...</Text>
+                <View style={styles.equalizerContainer}>
+                  {equalizerHeights.map((h, i) => (
+                    <View key={i} style={[styles.equalizerBar, { height: h }]} />
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <TextInput
+                value={inputVal}
+                onChangeText={setInputVal}
+                placeholder="Ask Rachel about your nutrition or training..."
+                placeholderTextColor="#666"
+                style={styles.input}
+                onSubmitEditing={handleSend}
+                returnKeyType="send"
+                blurOnSubmit={false}
+                editable={!isRecording}
+              />
+            )}
+            
             <TouchableOpacity onPress={handleSend} style={styles.sendBtn} disabled={isRecording}>
               <Text style={styles.sendBtnText}>Send</Text>
             </TouchableOpacity>
@@ -752,6 +794,42 @@ const styles = StyleSheet.create({
   },
   micBtnText: {
     fontSize: 16,
+  },
+  recordingInputOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F0E0D',
+    borderWidth: 1,
+    borderColor: '#FF3B3040',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    marginRight: 8,
+    height: 38,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+    marginRight: 8,
+  },
+  recordingText: {
+    flex: 1,
+    color: '#AAA',
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  equalizerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+  },
+  equalizerBar: {
+    width: 3,
+    backgroundColor: '#FFD60A',
+    borderRadius: 1.5,
   },
   sendBtn: {
     backgroundColor: '#FFD60A',
