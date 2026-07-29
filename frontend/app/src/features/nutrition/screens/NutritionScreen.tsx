@@ -26,6 +26,7 @@ import {
   useDeleteMeal,
   useRecommendedMeals,
   useHydration,
+  useAddHydration,
   useBudget,
   useShoppingList,
   useToggleShoppingItem,
@@ -76,11 +77,12 @@ export const NutritionScreen: React.FC = () => {
   const toggleShoppingMutation = useToggleShoppingItem();
   const generateGroceryMutation = useGenerateGrocery();
   const savePreferencesMutation = useSavePreferences();
+  const addHydrationMutation = useAddHydration();
 
   // ─── Direct Hydration Action (Optimistic) ───────────────────────────────────
   const handleAddWater = useCallback((amount: number) => {
-    store.optimisticAddHydration(amount);
-  }, [store]);
+    addHydrationMutation.mutate(amount);
+  }, [addHydrationMutation]);
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
   const handleUpdateBMI = async (weight: number, height: number) => {

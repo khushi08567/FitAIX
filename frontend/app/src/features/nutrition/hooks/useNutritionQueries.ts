@@ -186,6 +186,19 @@ export function useHydration() {
   return query;
 }
 
+export function useAddHydration() {
+  const qc = useQueryClient();
+  const optimistic = useNutritionStore((s) => s.optimisticAddHydration);
+  return useMutation({
+    mutationFn: (amount: number) => nutritionApi.addHydration(amount, USER_ID),
+    onMutate: optimistic,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEYS.hydration(USER_ID) });
+      qc.invalidateQueries({ queryKey: KEYS.daily(USER_ID) });
+    },
+  });
+}
+
 // ─── Budget ───────────────────────────────────────────────────────────────────
 export function useBudget() {
   const setBudget = useNutritionStore((s) => s.setBudget);
