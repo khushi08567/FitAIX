@@ -55,7 +55,6 @@ import { RachelChatModal } from '../components/RachelChatModal';
 export const NutritionScreen: React.FC = () => {
   // ─── Store State ─────────────────────────────────────────────────────────────
   const store = useNutritionStore();
-  const [showChat, setShowChat] = useState(false);
 
   // ─── Data Queries ────────────────────────────────────────────────────────────
   const { data: dailyData, isRefetching, refetch } = useDailyNutrition();
@@ -216,20 +215,6 @@ export const NutritionScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNav activeTab="Nutrition" />
-
-      {/* Floating Rachel AI Coach Chat button */}
-      <TouchableOpacity
-        style={styles.floatingChatBtn}
-        onPress={() => setShowChat(true)}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.floatingChatBtnText}>🤖</Text>
-      </TouchableOpacity>
-
-      {/* Coach Chat Overlay */}
-      <RachelChatModal visible={showChat} onClose={() => setShowChat(false)} />
     </SafeAreaView>
   );
 };
