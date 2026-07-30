@@ -27,7 +27,7 @@ interface MainAppProps {
 }
 
 function MainApp({ onLogout }: MainAppProps) {
-  const [activeTab, setActiveTab] = useState<TabName>('Nutrition');
+  const [activeTab, setActiveTab] = useState<TabName>('Dashboard');
   const [showChat, setShowChat] = useState(false);
 
   const renderActiveScreen = () => {

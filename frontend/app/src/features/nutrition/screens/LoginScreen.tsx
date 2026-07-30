@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -72,6 +72,38 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
+
+  // Animations State
+  const [theta, setTheta] = useState(0);
+  const [confetti, setConfetti] = useState<{ id: number; left: number; top: number; color: string }[]>([]);
+  const [confettiTick, setConfettiTick] = useState(0);
+
+  // DNA Rotation Timer
+  useEffect(() => {
+    if (step !== 18) return;
+    const interval = setInterval(() => {
+      setTheta((t) => t + 0.08);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [step]);
+
+  // Confetti Animation Setup & Timer
+  useEffect(() => {
+    if (step !== 19) return;
+    const colors = ['#FFD60A', '#00C6FF', '#8B5CF6', '#FF3B30', '#4CD964'];
+    const items = Array.from({ length: 40 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: -10 - Math.random() * 30,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    }));
+    setConfetti(items);
+
+    const interval = setInterval(() => {
+      setConfettiTick((t) => t + 2);
+    }, 25);
+    return () => clearInterval(interval);
+  }, [step]);
 
   // Handlers
   const handleSignIn = () => {
@@ -158,12 +190,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       }
     }
     if (step === 12) {
-      // Go to Workout Landing page instead of directly registering
       setStep(13);
       return;
     }
     if (step === 13) {
-      // Create Workouts Questionnaire starts
       setStep(14);
       return;
     }
@@ -184,13 +214,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         setRegisterError('Please select your frequency.');
         return;
       }
-      // Go to Final loading step
+      // DNA Helix screen setup
       setStep(18);
-      setIsLoading(true);
       setTimeout(() => {
-        setIsLoading(false);
-        handleCompleteRegistration();
-      }, 1500);
+        setStep(19);
+      }, 3500);
       return;
     }
 
@@ -208,27 +236,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   // Render Helpers
   const renderProgressBar = () => {
-    if (step === 13 || step === 18) return null; // Landing & loading step show no progress dashes
+    if (step >= 13) return null; // Post-notification steps do not show registration progress
 
-    if (step >= 14) {
-      // Workout Wizard Progress Bar (5 Dashes)
-      const workoutStepIdx = step - 14;
-      return (
-        <View style={styles.progressContainer}>
-          {[0, 1, 2, 3, 4].map((idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.progressDash,
-                idx <= workoutStepIdx ? styles.progressDashActive : styles.progressDashInactive
-              ]}
-            />
-          ))}
-        </View>
-      );
-    }
-
-    // Default Registration Progress Bar (13 Dashes)
     return (
       <View style={styles.progressContainer}>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((idx) => (
@@ -315,7 +324,108 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     );
   }
 
-  // Multi-step Registration Wizard
+  // DNA helix full-screen load view
+  if (step === 18) {
+    return (
+      <View style={styles.fullScreenDnaContainer}>
+        <View style={styles.dnaContainer}>
+          {[0, 1, 2, 3, 4, 5, 6].map((idx) => {
+            const angle = theta + idx * 0.5;
+            const xLeft = Math.sin(angle) * 45;
+            const xRight = -Math.sin(angle) * 45;
+            const depth = Math.cos(angle);
+            const scaleLeft = 0.7 + (depth + 1) * 0.25;
+            const scaleRight = 0.7 + (-depth + 1) * 0.25;
+            const zIndexLeft = depth > 0 ? 10 : 1;
+            const zIndexRight = -depth > 0 ? 10 : 1;
+
+            return (
+              <View key={idx} style={styles.dnaRow}>
+                <View style={[styles.dnaConnector, {
+                  left: 60 + Math.min(xLeft, xRight),
+                  width: Math.abs(xLeft - xRight),
+                }]} />
+
+                <View style={[
+                  styles.dnaSphere,
+                  {
+                    backgroundColor: '#FF3B30',
+                    transform: [
+                      { translateX: xLeft },
+                      { scale: scaleLeft }
+                    ],
+                    zIndex: zIndexLeft
+                  }
+                ]} />
+
+                <View style={[
+                  styles.dnaSphere,
+                  {
+                    backgroundColor: '#00C6FF',
+                    transform: [
+                      { translateX: xRight },
+                      { scale: scaleRight }
+                    ],
+                    zIndex: zIndexRight
+                  }
+                ]} />
+              </View>
+            );
+          })}
+        </View>
+        <Text style={styles.dnaTitle}>Creating your workouts...</Text>
+      </View>
+    );
+  }
+
+  // Success celebration full-screen view
+  if (step === 19) {
+    return (
+      <View style={styles.successScreenContainer}>
+        {confetti.map((c) => {
+          const top = (c.top + confettiTick * 0.35) % 110;
+          return (
+            <View
+              key={c.id}
+              style={[
+                styles.confettiPiece,
+                {
+                  left: `${c.left}%`,
+                  top: `${top}%`,
+                  backgroundColor: c.color,
+                  transform: [{ rotate: `${confettiTick + c.id * 20}deg` }]
+                }
+              ]}
+            />
+          );
+        })}
+
+        <View style={styles.successCard}>
+          <Text style={styles.successTitle}>Success!</Text>
+          <Text style={styles.successSubtitle}>Your workout plan is ready to go!</Text>
+
+          <View style={styles.checkCircle}>
+            <Text style={styles.checkMarkText}>✓</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.successBtn}
+            onPress={handleCompleteRegistration}
+            disabled={isLoading}
+            activeOpacity={0.85}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#12110D" />
+            ) : (
+              <Text style={styles.successBtnText}>Continue</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // Default multi-step forms
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -323,7 +433,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.onboardWrapper}>
-          {/* Header row: back arrow, center hexagonal mark */}
+          {/* Header row */}
           <View style={styles.onboardHeader}>
             <TouchableOpacity onPress={handleBackStep} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Text style={styles.backArrow}>←</Text>
@@ -332,7 +442,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               <Text style={styles.hexagonIcon}>⌁</Text>
             </View>
 
-            {/* Render Skip button on landing or workout quiz steps */}
             {step >= 13 ? (
               <TouchableOpacity onPress={handleCompleteRegistration} style={styles.skipBtn}>
                 <Text style={styles.skipText}>Skip</Text>
@@ -494,7 +603,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               <View style={styles.toggleRow}>
                 <TouchableOpacity
                   style={[styles.toggleBtn, weightUnit === 'lbs' && styles.toggleBtnActive]}
-                  onPress={() => setWeightUnit('lbs')}
+                  onPress={() => setHeightUnit('lbs')}
                 >
                   <Text style={[styles.toggleText, weightUnit === 'lbs' && styles.toggleTextActive]}>lbs</Text>
                 </TouchableOpacity>
@@ -715,7 +824,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {/* SECONDARY FLOW: WORKOUT WIZARD */}
           {step === 13 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>{firstName || 'Simran'}, let's go!</Text>
@@ -824,13 +932,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 18 && (
-            <View style={styles.stepBlock}>
-              <Text style={[styles.title, { textAlign: 'center' }]}>Creating your workout plan...</Text>
-              <Text style={[styles.subtitle, { textAlign: 'center', marginTop: 8 }]}>We are personalizing your weekly routine based on your equipment and schedule.</Text>
-            </View>
-          )}
-
           {/* Action Button Row */}
           {step === 12 ? (
             <View style={styles.doubleButtonColumn}>
@@ -863,10 +964,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             >
               <Text style={styles.actionBtnText}>Create workouts</Text>
             </TouchableOpacity>
-          ) : step === 18 ? (
-            <View style={styles.loadingWrapper}>
-              <ActivityIndicator size="large" color="#FFD60A" />
-            </View>
           ) : (
             <TouchableOpacity
               style={styles.actionBtn}
@@ -1356,9 +1453,129 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  loadingWrapper: {
-    paddingVertical: 20,
+  fullScreenDnaContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#0A0A09',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dnaContainer: {
+    height: 300,
+    width: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    transform: [{ rotate: '-35deg' }],
+  },
+  dnaRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    position: 'relative',
+    height: 24,
+  },
+  dnaConnector: {
+    position: 'absolute',
+    height: 4,
+    backgroundColor: '#2D2C28',
+    borderRadius: 2,
+  },
+  dnaSphere: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    position: 'absolute',
+  },
+  dnaTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 40,
+    letterSpacing: -0.3,
+  },
+  successScreenContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#0A0A09',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  confettiPiece: {
+    position: 'absolute',
+    width: 8,
+    height: 14,
+    borderRadius: 2,
+    opacity: 0.8,
+  },
+  successCard: {
+    width: '85%',
+    maxWidth: 360,
+    backgroundColor: '#161512',
+    borderColor: '#222',
+    borderWidth: 1,
+    borderRadius: 28,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.65,
+    shadowRadius: 18,
+    elevation: 10,
+    zIndex: 10,
+  },
+  successTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 12,
+    letterSpacing: -0.5,
+  },
+  successSubtitle: {
+    fontSize: 14,
+    color: '#A6A090',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 32,
+  },
+  checkCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(76, 217, 100, 0.1)',
+    borderColor: '#4CD964',
+    borderWidth: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  checkMarkText: {
+    color: '#4CD964',
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+  successBtn: {
+    backgroundColor: '#FFD60A',
+    width: '100%',
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FFD60A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+  },
+  successBtnText: {
+    color: '#12110D',
+    fontSize: 14,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
