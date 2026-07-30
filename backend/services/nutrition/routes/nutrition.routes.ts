@@ -19,8 +19,13 @@ import { getBudgetHandler } from '../controllers/budget.controller';
 import { generateGroceryHandler } from '../controllers/grocery.controller';
 import { getShoppingListHandler, toggleItemHandler } from '../controllers/shopping.controller';
 import { getPreferencesHandler, savePreferencesHandler } from '../controllers/preferences.controller';
+import { registerHandler, loginHandler } from '../controllers/auth.controller';
 
 const router = Router();
+
+// ─── Authentication ───────────────────────────────────────────────────────────
+router.post('/auth/register', registerHandler);
+router.post('/auth/login', loginHandler);
 
 // ─── Daily Nutrition & Macros ─────────────────────────────────────────────────
 router.get('/:userId/daily', getDailyNutritionHandler);

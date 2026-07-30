@@ -10,6 +10,7 @@ import {
   Alert,
   TouchableOpacity,
   Text,
+  TextInput,
 } from 'react-native';
 
 // Store & Hooks
@@ -56,6 +57,11 @@ import { RachelChatModal } from '../components/RachelChatModal';
 export const NutritionScreen: React.FC = () => {
   // ─── Store State ─────────────────────────────────────────────────────────────
   const store = useNutritionStore();
+
+  // ─── Search and Notification States ──────────────────────────────────────────
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // ─── Data Queries ────────────────────────────────────────────────────────────
   const { data: dailyData, isRefetching, refetch } = useDailyNutrition();
@@ -123,8 +129,8 @@ export const NutritionScreen: React.FC = () => {
       >
         {/* Section 1: Header */}
         <Header
-          onNotificationPress={() => Alert.alert('Notifications', 'You have 3 new AI recommendations.')}
-          onSearchPress={() => Alert.alert('Search', 'Food database search active.')}
+          onNotificationPress={() => setShowNotifications(true)}
+          onSearchPress={() => setShowSearch(true)}
         />
 
         <View style={styles.bodyContent}>
@@ -217,6 +223,109 @@ export const NutritionScreen: React.FC = () => {
         </View>
       </ScrollView>
 
+      {/* ─── Notifications Modal ─── */}
+      {showNotifications && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Notifications</Text>
+            <ScrollView style={styles.modalScroll}>
+              <View style={styles.notifRow}>
+                <Text style={styles.notifDot}>•</Text>
+                <View style={styles.notifTextWrap}>
+                  <Text style={styles.notifHeading}>⏰ Rest time is up!</Text>
+                  <Text style={styles.notifTime}>1 min ago</Text>
+                </View>
+              </View>
+              <View style={styles.notifRow}>
+                <Text style={styles.notifDot}>•</Text>
+                <View style={styles.notifTextWrap}>
+                  <Text style={styles.notifHeading}>📝 Workout Reminder: Legs & Abs</Text>
+                  <Text style={styles.notifTime}>5 mins ago</Text>
+                </View>
+              </View>
+              <View style={styles.notifRow}>
+                <Text style={styles.notifDot}>•</Text>
+                <View style={styles.notifTextWrap}>
+                  <Text style={styles.notifHeading}>💧 Hydration goal reached 50%</Text>
+                  <Text style={styles.notifTime}>30 mins ago</Text>
+                </View>
+              </View>
+              <View style={styles.notifRow}>
+                <Text style={styles.notifDot}>•</Text>
+                <View style={styles.notifTextWrap}>
+                  <Text style={styles.notifHeading}>🥑 AI Coach: Increase healthy fat intake</Text>
+                  <Text style={styles.notifTime}>1 hour ago</Text>
+                </View>
+              </View>
+            </ScrollView>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowNotifications(false)}>
+              <Text style={styles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* ─── Search Modal ─── */}
+      {showSearch && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Food Database Search</Text>
+            <TextInput
+              style={styles.searchBar}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Type food name... (e.g. Chicken, Banana)"
+              placeholderTextColor="#666"
+              autoFocus
+            />
+            <ScrollView style={styles.modalScroll} keyboardShouldPersistTaps="handled">
+              {[
+                { name: 'Chicken Breast (cooked)', cal: 165, pro: 31, carb: 0, fat: 3.6, size: '100g' },
+                { name: 'Whole Egg (boiled)', cal: 78, pro: 6, carb: 0.6, fat: 5, size: '1 large' },
+                { name: 'Oatmeal (cooked)', cal: 150, pro: 5, carb: 27, fat: 2.5, size: '1 bowl' },
+                { name: 'Atlantic Salmon (grilled)', cal: 206, pro: 22, carb: 0, fat: 12, size: '100g' },
+                { name: 'Banana', cal: 89, pro: 1.1, carb: 23, fat: 0.3, size: '1 medium' },
+                { name: 'Apple', cal: 52, pro: 0.3, carb: 14, fat: 0.2, size: '1 medium' },
+                { name: 'Greek Yogurt (non-fat)', cal: 130, pro: 15, carb: 6, fat: 0.4, size: '150g' },
+                { name: 'Almonds', cal: 164, pro: 6, carb: 6, fat: 14, size: '30g' },
+              ]
+                .filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                .map((food, idx) => (
+                  <View key={idx} style={styles.foodResultItem}>
+                    <View style={styles.foodInfo}>
+                      <Text style={styles.foodName}>{food.name}</Text>
+                      <Text style={styles.foodMacros}>
+                        {food.cal} kcal • P: {food.pro}g • C: {food.carb}g • F: {food.fat}g ({food.size})
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.logFoodBtn}
+                      onPress={() => {
+                        logMealMutation.mutate({
+                          mealType: 'snack',
+                          name: food.name,
+                          calories: food.cal,
+                          protein: food.pro,
+                          carbs: food.carb,
+                          fat: food.fat,
+                        });
+                        Alert.alert('Logged!', `${food.name} added to snacks.`);
+                        setShowSearch(false);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <Text style={styles.logFoodBtnText}>+ Log</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => { setShowSearch(false); setSearchQuery(''); }}>
+              <Text style={styles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
     </SafeAreaView>
   );
 };
@@ -255,6 +364,127 @@ const styles = StyleSheet.create({
   },
   floatingChatBtnText: {
     fontSize: 24,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalCard: {
+    width: '90%',
+    maxWidth: 360,
+    backgroundColor: '#1E1D1A',
+    borderColor: '#333',
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 24,
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  modalTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    letterSpacing: -0.3,
+  },
+  modalScroll: {
+    marginBottom: 16,
+  },
+  notifRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2C28',
+  },
+  notifDot: {
+    color: '#FFD60A',
+    fontSize: 16,
+  },
+  notifTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  notifHeading: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  notifTime: {
+    color: '#666',
+    fontSize: 10,
+  },
+  searchBar: {
+    backgroundColor: '#0F0E0D',
+    borderColor: '#2D2C28',
+    borderWidth: 1,
+    borderRadius: 14,
+    height: 44,
+    paddingHorizontal: 16,
+    color: '#FFF',
+    fontSize: 13,
+    marginBottom: 16,
+    outlineStyle: 'none',
+  },
+  foodResultItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2C28',
+    gap: 12,
+  },
+  foodInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  foodName: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  foodMacros: {
+    color: '#A6A090',
+    fontSize: 11,
+  },
+  logFoodBtn: {
+    backgroundColor: 'rgba(255, 214, 10, 0.15)',
+    borderColor: 'rgba(255, 214, 10, 0.3)',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  logFoodBtnText: {
+    color: '#FFD60A',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  closeBtn: {
+    backgroundColor: '#FFD60A',
+    borderRadius: 14,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeBtnText: {
+    color: '#12110D',
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
 });
 

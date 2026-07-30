@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   ScrollView
 } from 'react-native';
+import { nutritionApi } from '../services/nutritionApi';
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -133,26 +134,55 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   }, [step]);
 
   // Handlers
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     setSignInError('');
     if (!signInEmail.trim() || !signInPassword.trim()) {
       setSignInError('Please enter both email and password.');
       return;
     }
     setIsLoggingIn(true);
-    setTimeout(() => {
+    try {
+      await nutritionApi.loginUser({
+        email: signInEmail,
+        password: signInPassword,
+      });
       setIsLoggingIn(false);
       onLogin();
-    }, 1000);
+    } catch (err: any) {
+      setIsLoggingIn(false);
+      setSignInError(err.response?.data?.message || 'Invalid email or password.');
+    }
   };
 
-  const handleCompleteRegistration = () => {
+  const handleCompleteRegistration = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await nutritionApi.registerUser({
+        email: regEmail,
+        password: regPassword,
+        firstName,
+        lastName,
+        goal: selectedGoal,
+        gender: selectedGender,
+        height: heightUnit === 'in' ? `${heightFt}ft ${heightIn}in` : `${heightCm}cm`,
+        weight: `${weightVal}${weightUnit}`,
+        birthdate: `${birthDay}/${birthMonth}/${birthYear}`,
+        experience: selectedExperience,
+        motivation: selectedMotivation,
+        obstacle: selectedObstacle,
+        source: selectedSource,
+        workoutLocation,
+        workoutExperience,
+        workoutDuration,
+        workoutFrequency,
+      });
       setIsLoading(false);
       alert('Account successfully created! Welcome to FitAIX.');
       onLogin();
-    }, 1200);
+    } catch (err: any) {
+      setIsLoading(false);
+      alert(err.response?.data?.message || 'Failed to create account. Please try again.');
+    }
   };
 
   const handleNextStep = () => {

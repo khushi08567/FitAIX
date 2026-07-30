@@ -155,6 +155,17 @@ export const nutritionApi = {
     });
     return res.data.data;
   },
+
+  // Auth
+  registerUser: async (data: any): Promise<any> => {
+    const res = await apiClient.post<ApiResponse<any>>('/nutrition/auth/register', data);
+    return res.data.data;
+  },
+
+  loginUser: async (data: any): Promise<any> => {
+    const res = await apiClient.post<ApiResponse<any>>('/nutrition/auth/login', data);
+    return res.data.data;
+  },
 };
 
 export default nutritionApi;
