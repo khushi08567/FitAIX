@@ -64,6 +64,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [selectedObstacle, setSelectedObstacle] = useState<ObstacleOption | null>(null);
   const [selectedSource, setSelectedSource] = useState<SourceOption | null>(null);
 
+  // Workout Wizard Details
+  const [workoutLocation, setWorkoutLocation] = useState<'Gym' | 'Home' | null>(null);
+  const [workoutExperience, setWorkoutExperience] = useState<'Beginner' | 'Intermediate' | 'Advanced' | null>(null);
+  const [workoutDuration, setWorkoutDuration] = useState<'30 minutes' | '45 minutes' | null>(null);
+  const [workoutFrequency, setWorkoutFrequency] = useState<'3 days' | '4 days' | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
 
@@ -81,6 +87,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     }, 1000);
   };
 
+  const handleCompleteRegistration = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      alert('Account successfully created! Welcome to FitAIX.');
+      onLogin();
+    }, 1200);
+  };
+
   const handleNextStep = () => {
     setRegisterError('');
     if (step === 0) {
@@ -89,7 +104,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         return;
       }
     }
-    // Step 1: Last name is optional, so no validation needed
+    // Step 1: Last name is optional
     if (step === 2 && !selectedGoal) {
       setRegisterError('Please select a fitness goal.');
       return;
@@ -143,13 +158,39 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       }
     }
     if (step === 12) {
-      // Finish Registration
+      // Go to Workout Landing page instead of directly registering
+      setStep(13);
+      return;
+    }
+    if (step === 13) {
+      // Create Workouts Questionnaire starts
+      setStep(14);
+      return;
+    }
+    if (step === 14 && !workoutLocation) {
+      setRegisterError('Please select a workout location.');
+      return;
+    }
+    if (step === 15 && !workoutExperience) {
+      setRegisterError('Please select your experience level.');
+      return;
+    }
+    if (step === 16 && !workoutDuration) {
+      setRegisterError('Please select your workout duration.');
+      return;
+    }
+    if (step === 17) {
+      if (!workoutFrequency) {
+        setRegisterError('Please select your frequency.');
+        return;
+      }
+      // Go to Final loading step
+      setStep(18);
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
-        alert('Account successfully created! Welcome to FitAIX.');
-        onLogin();
-      }, 1200);
+        handleCompleteRegistration();
+      }, 1500);
       return;
     }
 
@@ -167,6 +208,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   // Render Helpers
   const renderProgressBar = () => {
+    if (step === 13 || step === 18) return null; // Landing & loading step show no progress dashes
+
+    if (step >= 14) {
+      // Workout Wizard Progress Bar (5 Dashes)
+      const workoutStepIdx = step - 14;
+      return (
+        <View style={styles.progressContainer}>
+          {[0, 1, 2, 3, 4].map((idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.progressDash,
+                idx <= workoutStepIdx ? styles.progressDashActive : styles.progressDashInactive
+              ]}
+            />
+          ))}
+        </View>
+      );
+    }
+
+    // Default Registration Progress Bar (13 Dashes)
     return (
       <View style={styles.progressContainer}>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((idx) => (
@@ -253,7 +315,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     );
   }
 
-  // Multi-step Registration Wizard (13 Steps)
+  // Multi-step Registration Wizard
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -269,7 +331,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             <View style={styles.hexagonBorder}>
               <Text style={styles.hexagonIcon}>⌁</Text>
             </View>
-            <View style={{ width: 24 }} />
+
+            {/* Render Skip button on landing or workout quiz steps */}
+            {step >= 13 ? (
+              <TouchableOpacity onPress={handleCompleteRegistration} style={styles.skipBtn}>
+                <Text style={styles.skipText}>Skip</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 28 }} />
+            )}
           </View>
 
           {renderProgressBar()}
@@ -645,6 +715,122 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
+          {/* SECONDARY FLOW: WORKOUT WIZARD */}
+          {step === 13 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>{firstName || 'Simran'}, let's go!</Text>
+              <Text style={styles.subtitle}>Let's create your workout plan. Our workout wizard will take into account your goals, experience, and equipment.</Text>
+
+              {/* Trait Pills Grid */}
+              <View style={styles.pillsGrid}>
+                <View style={styles.pillCard}>
+                  <Text style={[styles.pillIcon, { color: '#00C6FF' }]}>⏱</Text>
+                  <Text style={styles.pillText}>30 Min</Text>
+                </View>
+                <View style={styles.pillCard}>
+                  <Text style={[styles.pillIcon, { color: '#8B5CF6' }]}>🏃</Text>
+                  <Text style={styles.pillText}>Beginner</Text>
+                </View>
+                <View style={styles.pillCard}>
+                  <Text style={[styles.pillIcon, { color: '#2F80FF' }]}>🏋️</Text>
+                  <Text style={styles.pillText}>Barbells</Text>
+                </View>
+                <View style={styles.pillCard}>
+                  <Text style={[styles.pillIcon, { color: '#FF3B30' }]}>🏠</Text>
+                  <Text style={styles.pillText}>Home</Text>
+                </View>
+                <View style={styles.pillCard}>
+                  <Text style={[styles.pillIcon, { color: '#FFD60A' }]}>📅</Text>
+                  <Text style={styles.pillText}>3 Days / Wk</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {step === 14 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>Where will you be primarily working out?</Text>
+              <View style={styles.optionList}>
+                {(['Gym', 'Home'] as const).map((loc) => (
+                  <TouchableOpacity
+                    key={loc}
+                    style={[styles.optionCard, workoutLocation === loc && styles.optionCardSelected]}
+                    onPress={() => setWorkoutLocation(loc)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, workoutLocation === loc && styles.optionTextSelected]}>{loc}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 15 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How much experience do you have with strength training?</Text>
+              <View style={styles.optionList}>
+                {[
+                  { title: 'Beginner', desc: "I've never lifted weights before or just recently started." },
+                  { title: 'Intermediate', desc: 'I have some experience with strength training and have tried a variety of exercises.' },
+                  { title: 'Advanced', desc: 'I have done at least two years of consistent strength training and feel very comfortable with most exercises.' }
+                ].map((exp) => (
+                  <TouchableOpacity
+                    key={exp.title}
+                    style={[styles.optionColumnCard, workoutExperience === exp.title && styles.optionCardSelected]}
+                    onPress={() => setWorkoutExperience(exp.title as 'Beginner' | 'Intermediate' | 'Advanced')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.motTitleText, workoutExperience === exp.title && styles.optionTextSelected]}>{exp.title}</Text>
+                    <Text style={styles.motDescText}>{exp.desc}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 16 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How long would you like your workouts to be?</Text>
+              <View style={styles.optionList}>
+                {(['30 minutes', '45 minutes'] as const).map((dur) => (
+                  <TouchableOpacity
+                    key={dur}
+                    style={[styles.optionCard, workoutDuration === dur && styles.optionCardSelected]}
+                    onPress={() => setWorkoutDuration(dur)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, workoutDuration === dur && styles.optionTextSelected]}>{dur}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 17 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How many days a week can you work out?</Text>
+              <View style={styles.optionList}>
+                {(['3 days', '4 days'] as const).map((freq) => (
+                  <TouchableOpacity
+                    key={freq}
+                    style={[styles.optionCard, workoutFrequency === freq && styles.optionCardSelected]}
+                    onPress={() => setWorkoutFrequency(freq)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, workoutFrequency === freq && styles.optionTextSelected]}>{freq}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 18 && (
+            <View style={styles.stepBlock}>
+              <Text style={[styles.title, { textAlign: 'center' }]}>Creating your workout plan...</Text>
+              <Text style={[styles.subtitle, { textAlign: 'center', marginTop: 8 }]}>We are personalizing your weekly routine based on your equipment and schedule.</Text>
+            </View>
+          )}
+
           {/* Action Button Row */}
           {step === 12 ? (
             <View style={styles.doubleButtonColumn}>
@@ -668,6 +854,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               >
                 <Text style={styles.laterBtnText}>I'll do this later</Text>
               </TouchableOpacity>
+            </View>
+          ) : step === 13 ? (
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={handleNextStep}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.actionBtnText}>Create workouts</Text>
+            </TouchableOpacity>
+          ) : step === 18 ? (
+            <View style={styles.loadingWrapper}>
+              <ActivityIndicator size="large" color="#FFD60A" />
             </View>
           ) : (
             <TouchableOpacity
@@ -762,6 +960,15 @@ const styles = StyleSheet.create({
     color: '#FFD60A',
     fontSize: 22,
     fontWeight: '300',
+  },
+  skipBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  skipText: {
+    color: '#888',
+    fontSize: 13,
+    fontWeight: '600',
   },
   progressContainer: {
     flexDirection: 'row',
@@ -1122,5 +1329,36 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 13,
     fontWeight: '700',
+  },
+  pillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  pillCard: {
+    backgroundColor: '#0F0E0D',
+    borderColor: '#2D2C28',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pillIcon: {
+    fontSize: 14,
+  },
+  pillText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  loadingWrapper: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
