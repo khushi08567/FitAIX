@@ -7,6 +7,7 @@ import { DashboardScreen } from './src/features/nutrition/screens/DashboardScree
 import { WorkoutScreen } from './src/features/nutrition/screens/WorkoutScreen';
 import { CommunityScreen } from './src/features/nutrition/screens/CommunityScreen';
 import { ProfileScreen } from './src/features/nutrition/screens/ProfileScreen';
+import { LoginScreen } from './src/features/nutrition/screens/LoginScreen';
 import { BottomNav } from './src/features/nutrition/components/BottomNav';
 import { RachelChatModal } from './src/features/nutrition/components/RachelChatModal';
 
@@ -21,7 +22,11 @@ const queryClient = new QueryClient({
 
 type TabName = 'Dashboard' | 'Workout' | 'Nutrition' | 'Community' | 'Profile';
 
-function MainApp() {
+interface MainAppProps {
+  onLogout: () => void;
+}
+
+function MainApp({ onLogout }: MainAppProps) {
   const [activeTab, setActiveTab] = useState<TabName>('Nutrition');
   const [showChat, setShowChat] = useState(false);
 
@@ -36,7 +41,7 @@ function MainApp() {
       case 'Community':
         return <CommunityScreen />;
       case 'Profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onLogout={onLogout} />;
       default:
         return <NutritionScreen />;
     }
@@ -100,9 +105,15 @@ const styles = StyleSheet.create({
 });
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <MainApp />
+      {isLoggedIn ? (
+        <MainApp onLogout={() => setIsLoggedIn(false)} />
+      ) : (
+        <LoginScreen onLogin={() => setIsLoggedIn(true)} />
+      )}
     </QueryClientProvider>
   );
 }

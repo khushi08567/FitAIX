@@ -2,7 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { usePreferences } from '../hooks/useNutritionQueries';
 
-export const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+  onLogout: () => void;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   const { data: preferencesData } = usePreferences();
 
   // Map allergy states
@@ -87,7 +91,7 @@ export const ProfileScreen: React.FC = () => {
           if (Platform.OS === 'web') {
             const confirmLogout = window.confirm('Are you sure you want to log out of FitAIX?');
             if (confirmLogout) {
-              alert('Successfully logged out.');
+              onLogout();
             }
           } else {
             Alert.alert(
@@ -95,7 +99,7 @@ export const ProfileScreen: React.FC = () => {
               'Are you sure you want to log out of FitAIX?',
               [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'Successfully logged out.') }
+                { text: 'Logout', style: 'destructive', onPress: onLogout }
               ]
             );
           }
