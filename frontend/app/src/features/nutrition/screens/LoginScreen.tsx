@@ -17,6 +17,10 @@ interface LoginScreenProps {
 
 type GoalOption = 'Build muscle' | 'Lose fat' | 'Gain strength' | 'Improve overall health' | 'Improve performance' | 'Something else';
 type GenderOption = 'Male' | 'Female' | 'Prefer not to say';
+type ExperienceOption = "I'm just getting started" | 'Less than 1 year' | '1-2 years' | '2-5 years' | 'More than 5 years';
+type MotivationOption = 'Accountability' | 'Competition' | 'Fun' | 'Self-Motivated';
+type ObstacleOption = 'Lack of motivation' | 'Not sure what to do to get results' | 'Not enough time to work out' | 'Dealing with an injury' | 'Something else' | 'None right now';
+type SourceOption = 'Friends or family' | 'Reddit' | 'Google search' | 'Online article' | 'App Store search' | 'ChatGPT / AI' | 'Facebook / Instagram';
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   // Navigation State
@@ -29,26 +33,34 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [signInError, setSignInError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Register state
+  // Register credentials state
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
+
+  // Step 1-2 details
   const [selectedGoal, setSelectedGoal] = useState<GoalOption | null>(null);
   const [selectedGender, setSelectedGender] = useState<GenderOption | null>(null);
 
-  // Height State
+  // Step 3 Height State
   const [heightUnit, setHeightUnit] = useState<'in' | 'cm'>('in');
   const [heightFt, setHeightFt] = useState('');
   const [heightIn, setHeightIn] = useState('');
   const [heightCm, setHeightCm] = useState('');
 
-  // Weight State
+  // Step 4 Weight State
   const [weightUnit, setWeightUnit] = useState<'lbs' | 'kg'>('kg');
   const [weightVal, setWeightVal] = useState('');
 
-  // Birthday State
+  // Step 5 Birthday State
   const [birthDay, setBirthDay] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthYear, setBirthYear] = useState('');
+
+  // New Onboarding Steps State
+  const [selectedExperience, setSelectedExperience] = useState<ExperienceOption | null>(null);
+  const [selectedMotivation, setSelectedMotivation] = useState<MotivationOption | null>(null);
+  const [selectedObstacle, setSelectedObstacle] = useState<ObstacleOption | null>(null);
+  const [selectedSource, setSelectedSource] = useState<SourceOption | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
@@ -101,9 +113,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       setRegisterError('Please enter your weight.');
       return;
     }
-    if (step === 5) {
-      if (!birthDay || !birthMonth || !birthYear) {
-        setRegisterError('Please enter your complete birthday.');
+    if (step === 5 && (!birthDay || !birthMonth || !birthYear)) {
+      setRegisterError('Please enter your complete birthday.');
+      return;
+    }
+    if (step === 6 && !selectedExperience) {
+      setRegisterError('Please select your training experience.');
+      return;
+    }
+    if (step === 7 && !selectedMotivation) {
+      setRegisterError('Please select what motivates you.');
+      return;
+    }
+    if (step === 8 && !selectedObstacle) {
+      setRegisterError('Please select your biggest obstacle.');
+      return;
+    }
+    if (step === 9) {
+      if (!selectedSource) {
+        setRegisterError('Please select how you heard about us.');
         return;
       }
       // Finish Registration
@@ -132,7 +160,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const renderProgressBar = () => {
     return (
       <View style={styles.progressContainer}>
-        {[0, 1, 2, 3, 4, 5].map((idx) => (
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((idx) => (
           <View
             key={idx}
             style={[
@@ -216,7 +244,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     );
   }
 
-  // Multi-step Registration Wizard
+  // Multi-step Registration Wizard (10 Steps)
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -460,6 +488,87 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
+          {step === 6 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How long have you been strength training consistently?</Text>
+              <View style={styles.optionList}>
+                {(["I'm just getting started", 'Less than 1 year', '1-2 years', '2-5 years', 'More than 5 years'] as ExperienceOption[]).map((exp) => (
+                  <TouchableOpacity
+                    key={exp}
+                    style={[styles.optionCardRow, selectedExperience === exp && styles.optionCardSelected]}
+                    onPress={() => setSelectedExperience(exp)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedExperience === exp && styles.optionTextSelected]}>{exp}</Text>
+                    {selectedExperience === exp && (
+                      <Text style={styles.checkmarkIcon}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 7 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What helps you stay motivated to work out?</Text>
+              <View style={styles.optionList}>
+                {[
+                  { title: 'Accountability', desc: 'Having others keep me accountable' },
+                  { title: 'Competition', desc: 'Turning it into a challenge or friendly competition' },
+                  { title: 'Fun', desc: 'Making it fun and part of my lifestyle' },
+                  { title: 'Self-Motivated', desc: 'I stay motivated on my own but enjoy helping others' }
+                ].map((mot) => (
+                  <TouchableOpacity
+                    key={mot.title}
+                    style={[styles.optionColumnCard, selectedMotivation === mot.title && styles.optionCardSelected]}
+                    onPress={() => setSelectedMotivation(mot.title as MotivationOption)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.motTitleText, selectedMotivation === mot.title && styles.optionTextSelected]}>{mot.title}</Text>
+                    <Text style={styles.motDescText}>{mot.desc}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 8 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What do you feel is the biggest obstacle getting in the way of your progress?</Text>
+              <View style={styles.optionList}>
+                {(['Lack of motivation', 'Not sure what to do to get results', 'Not enough time to work out', 'Dealing with an injury', 'Something else', 'None right now'] as ObstacleOption[]).map((obs) => (
+                  <TouchableOpacity
+                    key={obs}
+                    style={[styles.optionCard, selectedObstacle === obs && styles.optionCardSelected]}
+                    onPress={() => setSelectedObstacle(obs)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedObstacle === obs && styles.optionTextSelected]}>{obs}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 9 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How did you hear about us?</Text>
+              <View style={styles.optionList}>
+                {(['Friends or family', 'Reddit', 'Google search', 'Online article', 'App Store search', 'ChatGPT / AI', 'Facebook / Instagram'] as SourceOption[]).map((src) => (
+                  <TouchableOpacity
+                    key={src}
+                    style={[styles.optionCard, selectedSource === src && styles.optionCardSelected]}
+                    onPress={() => setSelectedSource(src)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedSource === src && styles.optionTextSelected]}>{src}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* Next Button */}
           <TouchableOpacity
             style={styles.actionBtn}
@@ -470,7 +579,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             {isLoading ? (
               <ActivityIndicator size="small" color="#12110D" />
             ) : (
-              <Text style={styles.actionBtnText}>{step === 5 ? 'Create Account' : 'Next'}</Text>
+              <Text style={styles.actionBtnText}>{step === 9 ? 'Create Account' : 'Next'}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -653,6 +762,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
   },
+  optionCardRow: {
+    width: '100%',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    backgroundColor: '#0F0E0D',
+    borderColor: '#2D2C28',
+    borderWidth: 1,
+    borderRadius: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  optionColumnCard: {
+    width: '100%',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    backgroundColor: '#0F0E0D',
+    borderColor: '#2D2C28',
+    borderWidth: 1,
+    borderRadius: 14,
+    flexDirection: 'column',
+    gap: 4,
+  },
   optionCardSelected: {
     borderColor: '#FFD60A',
     backgroundColor: 'rgba(255, 214, 10, 0.04)',
@@ -664,6 +796,21 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     color: '#FFF',
+  },
+  checkmarkIcon: {
+    color: '#FFD60A',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  motTitleText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#A6A090',
+  },
+  motDescText: {
+    fontSize: 11,
+    color: '#666',
+    lineHeight: 16,
   },
   toggleRow: {
     flexDirection: 'row',
