@@ -9,17 +9,26 @@ interface ProfileScreenProps {
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   const { data: preferencesData } = usePreferences();
 
-  // Map allergy states
-  const activeAllergies = Object.entries(preferencesData?.allergies ?? {})
-    .filter(([_, active]) => active)
-    .map(([allergy]) => allergy);
+  // Map allergy states (array of strings)
+  const activeAllergies = Array.isArray(preferencesData?.allergies)
+    ? preferencesData.allergies
+    : [];
 
-  // Map category states
-  const activeCategories = Object.entries(preferencesData?.categories ?? {})
-    .filter(([_, active]) => active)
-    .map(([category]) => category);
+  // Map category states (array of strings)
+  const activeCategories = Array.isArray(preferencesData?.dietaryPreferences)
+    ? preferencesData.dietaryPreferences
+    : [];
 
-  const favoriteFoods = preferencesData?.favoriteFoods ?? '';
+  const favoriteFoods = Array.isArray(preferencesData?.favoriteFoods)
+    ? preferencesData.favoriteFoods.join(', ')
+    : '';
+
+  const formatCategory = (slug: string) => {
+    return slug
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -54,7 +63,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
             <View style={styles.chipRow}>
               {activeCategories.map((c, idx) => (
                 <View key={idx} style={styles.categoryChip}>
-                  <Text style={styles.chipText}>{c}</Text>
+                  <Text style={styles.chipText}>{formatCategory(c)}</Text>
                 </View>
               ))}
             </View>
