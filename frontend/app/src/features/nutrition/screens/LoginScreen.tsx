@@ -78,6 +78,33 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [confetti, setConfetti] = useState<{ id: number; left: number; top: number; color: string }[]>([]);
   const [confettiTick, setConfettiTick] = useState(0);
 
+  // Inject global CSS fix for web browser input autofill backgrounds
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const styleId = 'fitaix-web-autofill-fix';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.type = 'text/css';
+        style.innerHTML = `
+          input:-webkit-autofill,
+          input:-webkit-autofill:hover, 
+          input:-webkit-autofill:focus, 
+          input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #0F0E0D inset !important;
+            -webkit-text-fill-color: #FFF !important;
+            transition: background-color 5000s ease-in-out 0s;
+          }
+          input {
+            background-color: transparent !important;
+            background: transparent !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []);
+
   // DNA Rotation Timer
   useEffect(() => {
     if (step !== 18) return;
@@ -1269,13 +1296,14 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
-    padding: 0,
+    paddingHorizontal: 4,
     width: 60,
     minWidth: 40,
     borderWidth: 0,
     borderStyle: 'none',
     backgroundColor: 'transparent',
     outlineStyle: 'none',
+    textAlign: 'center',
   },
   inputSuffix: {
     color: '#FFD60A',
@@ -1301,6 +1329,8 @@ const styles = StyleSheet.create({
     width: 'auto',
     borderStyle: 'solid',
     outlineStyle: 'none',
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
   divider: {
     color: '#333',
@@ -1362,7 +1392,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#FFF',
     fontSize: 14,
-    padding: 0,
+    paddingLeft: 8,
     borderWidth: 0,
     backgroundColor: 'transparent',
     outlineStyle: 'none',
