@@ -131,21 +131,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const handleNextStep = () => {
     setRegisterError('');
     if (step === 0) {
+      if (!regEmail.trim() || !regPassword.trim()) {
+        setRegisterError('Please enter an email and password.');
+        return;
+      }
+      if (regPassword.length < 6) {
+        setRegisterError('Password must be at least 6 characters.');
+        return;
+      }
+    }
+    if (step === 1) {
       if (!firstName.trim()) {
         setRegisterError('Please enter your first name.');
         return;
       }
     }
-    // Step 1: Last name is optional
-    if (step === 2 && !selectedGoal) {
+    // Step 2: Last name is optional
+    if (step === 3 && !selectedGoal) {
       setRegisterError('Please select a fitness goal.');
       return;
     }
-    if (step === 3 && !selectedGender) {
+    if (step === 4 && !selectedGender) {
       setRegisterError('Please select a gender option.');
       return;
     }
-    if (step === 4) {
+    if (step === 5) {
       if (heightUnit === 'in' && (!heightFt || !heightIn)) {
         setRegisterError('Please enter your height in feet/inches.');
         return;
@@ -155,39 +165,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         return;
       }
     }
-    if (step === 5 && !weightVal) {
+    if (step === 6 && !weightVal) {
       setRegisterError('Please enter your weight.');
       return;
     }
-    if (step === 6 && (!birthDay || !birthMonth || !birthYear)) {
+    if (step === 7 && (!birthDay || !birthMonth || !birthYear)) {
       setRegisterError('Please enter your complete birthday.');
       return;
     }
-    if (step === 7 && !selectedExperience) {
+    if (step === 8 && !selectedExperience) {
       setRegisterError('Please select your training experience.');
       return;
     }
-    if (step === 8 && !selectedMotivation) {
+    if (step === 9 && !selectedMotivation) {
       setRegisterError('Please select what motivates you.');
       return;
     }
-    if (step === 9 && !selectedObstacle) {
+    if (step === 10 && !selectedObstacle) {
       setRegisterError('Please select your biggest obstacle.');
       return;
     }
-    if (step === 10 && !selectedSource) {
+    if (step === 11 && !selectedSource) {
       setRegisterError('Please select how you heard about us.');
       return;
-    }
-    if (step === 11) {
-      if (!regEmail.trim() || !regPassword.trim()) {
-        setRegisterError('Please enter an email and password.');
-        return;
-      }
-      if (regPassword.length < 6) {
-        setRegisterError('Password must be at least 6 characters.');
-        return;
-      }
     }
     if (step === 12) {
       setStep(13);
@@ -214,7 +214,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         setRegisterError('Please select your frequency.');
         return;
       }
-      // DNA Helix screen setup
       setStep(18);
       setTimeout(() => {
         setStep(19);
@@ -458,306 +457,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           {/* Wizard step views */}
           {step === 0 && (
             <View style={styles.stepBlock}>
-              <Text style={styles.title}>What should we call you?</Text>
-              <View style={styles.iconInputGroup}>
-                <Text style={styles.inputPrefixIcon}>👤</Text>
-                <TextInput
-                  style={styles.iconTextInput}
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  placeholder="First name"
-                  placeholderTextColor="#555"
-                  autoCorrect={false}
-                />
-              </View>
-            </View>
-          )}
-
-          {step === 1 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>What should we call you?</Text>
-              <View style={styles.iconInputGroup}>
-                <Text style={styles.inputPrefixIcon}>👤</Text>
-                <TextInput
-                  style={styles.iconTextInput}
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Last name (optional)"
-                  placeholderTextColor="#555"
-                  autoCorrect={false}
-                />
-              </View>
-            </View>
-          )}
-
-          {step === 2 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>What is your primary fitness goal?</Text>
-              <View style={styles.optionList}>
-                {(['Build muscle', 'Lose fat', 'Gain strength', 'Improve overall health', 'Improve performance', 'Something else'] as GoalOption[]).map((goal) => (
-                  <TouchableOpacity
-                    key={goal}
-                    style={[styles.optionCard, selectedGoal === goal && styles.optionCardSelected]}
-                    onPress={() => setSelectedGoal(goal)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.optionText, selectedGoal === goal && styles.optionTextSelected]}>{goal}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {step === 3 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>What is your gender?</Text>
-              <View style={styles.optionList}>
-                {(['Male', 'Female', 'Prefer not to say'] as GenderOption[]).map((gender) => (
-                  <TouchableOpacity
-                    key={gender}
-                    style={[styles.optionCard, selectedGender === gender && styles.optionCardSelected]}
-                    onPress={() => setSelectedGender(gender)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.optionText, selectedGender === gender && styles.optionTextSelected]}>{gender}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {step === 4 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>How tall are you?</Text>
-              <Text style={styles.subtitle}>We use your height to help calculate your strength metrics.</Text>
-
-              {/* Unit Toggle */}
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, heightUnit === 'in' && styles.toggleBtnActive]}
-                  onPress={() => setHeightUnit('in')}
-                >
-                  <Text style={[styles.toggleText, heightUnit === 'in' && styles.toggleTextActive]}>in</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, heightUnit === 'cm' && styles.toggleBtnActive]}
-                  onPress={() => setHeightUnit('cm')}
-                >
-                  <Text style={[styles.toggleText, heightUnit === 'cm' && styles.toggleTextActive]}>cm</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Height Inputs */}
-              {heightUnit === 'in' ? (
-                <View style={styles.multiInputRow}>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.numberInput}
-                      value={heightFt}
-                      onChangeText={setHeightFt}
-                      keyboardType="numeric"
-                      maxLength={1}
-                      placeholder="0"
-                      placeholderTextColor="#444"
-                    />
-                    <Text style={styles.inputSuffix}>ft</Text>
-                  </View>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.numberInput}
-                      value={heightIn}
-                      onChangeText={setHeightIn}
-                      keyboardType="numeric"
-                      maxLength={2}
-                      placeholder="0"
-                      placeholderTextColor="#444"
-                    />
-                    <Text style={styles.inputSuffix}>in</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.singleInputRow}>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.numberInput}
-                      value={heightCm}
-                      onChangeText={setHeightCm}
-                      keyboardType="numeric"
-                      maxLength={3}
-                      placeholder="0"
-                      placeholderTextColor="#444"
-                    />
-                    <Text style={styles.inputSuffix}>cm</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-
-          {step === 5 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>What is your current weight?</Text>
-              <Text style={styles.subtitle}>We use your weight to help calculate your strength metrics.</Text>
-
-              {/* Unit Toggle */}
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, weightUnit === 'lbs' && styles.toggleBtnActive]}
-                  onPress={() => setHeightUnit('lbs')}
-                >
-                  <Text style={[styles.toggleText, weightUnit === 'lbs' && styles.toggleTextActive]}>lbs</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, weightUnit === 'kg' && styles.toggleBtnActive]}
-                  onPress={() => setWeightUnit('kg')}
-                >
-                  <Text style={[styles.toggleText, weightUnit === 'kg' && styles.toggleTextActive]}>kg</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Weight Input */}
-              <View style={styles.singleInputRow}>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.numberInput}
-                    value={weightVal}
-                    onChangeText={setWeightVal}
-                    keyboardType="numeric"
-                    maxLength={3}
-                    placeholder="0"
-                    placeholderTextColor="#444"
-                  />
-                  <Text style={styles.inputSuffix}>{weightUnit}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {step === 6 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>When is your birthday?</Text>
-              <Text style={styles.subtitle}>We use your age to help calculate your strength metrics.</Text>
-
-              <View style={styles.birthdateRow}>
-                <TextInput
-                  style={[styles.birthInput, { flex: 1.2 }]}
-                  value={birthDay}
-                  onChangeText={setBirthDay}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  placeholder="DD"
-                  placeholderTextColor="#444"
-                  textAlign="center"
-                />
-                <Text style={styles.divider}>/</Text>
-                <TextInput
-                  style={[styles.birthInput, { flex: 1.2 }]}
-                  value={birthMonth}
-                  onChangeText={setBirthMonth}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  placeholder="MM"
-                  placeholderTextColor="#444"
-                  textAlign="center"
-                />
-                <Text style={styles.divider}>/</Text>
-                <TextInput
-                  style={[styles.birthInput, { flex: 2 }]}
-                  value={birthYear}
-                  onChangeText={setBirthYear}
-                  keyboardType="numeric"
-                  maxLength={4}
-                  placeholder="YYYY"
-                  placeholderTextColor="#444"
-                  textAlign="center"
-                />
-              </View>
-            </View>
-          )}
-
-          {step === 7 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>How long have you been strength training consistently?</Text>
-              <View style={styles.optionList}>
-                {(["I'm just getting started", 'Less than 1 year', '1-2 years', '2-5 years', 'More than 5 years'] as ExperienceOption[]).map((exp) => (
-                  <TouchableOpacity
-                    key={exp}
-                    style={[styles.optionCardRow, selectedExperience === exp && styles.optionCardSelected]}
-                    onPress={() => setSelectedExperience(exp)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.optionText, selectedExperience === exp && styles.optionTextSelected]}>{exp}</Text>
-                    {selectedExperience === exp && (
-                      <Text style={styles.checkmarkIcon}>✓</Text>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {step === 8 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>What helps you stay motivated to work out?</Text>
-              <View style={styles.optionList}>
-                {[
-                  { title: 'Accountability', desc: 'Having others keep me accountable' },
-                  { title: 'Competition', desc: 'Turning it into a challenge or friendly competition' },
-                  { title: 'Fun', desc: 'Making it fun and part of my lifestyle' },
-                  { title: 'Self-Motivated', desc: 'I stay motivated on my own but enjoy helping others' }
-                ].map((mot) => (
-                  <TouchableOpacity
-                    key={mot.title}
-                    style={[styles.optionColumnCard, selectedMotivation === mot.title && styles.optionCardSelected]}
-                    onPress={() => setSelectedMotivation(mot.title as MotivationOption)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.motTitleText, selectedMotivation === mot.title && styles.optionTextSelected]}>{mot.title}</Text>
-                    <Text style={styles.motDescText}>{mot.desc}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {step === 9 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>What do you feel is the biggest obstacle getting in the way of your progress?</Text>
-              <View style={styles.optionList}>
-                {(['Lack of motivation', 'Not sure what to do to get results', 'Not enough time to work out', 'Dealing with an injury', 'Something else', 'None right now'] as ObstacleOption[]).map((obs) => (
-                  <TouchableOpacity
-                    key={obs}
-                    style={[styles.optionCard, selectedObstacle === obs && styles.optionCardSelected]}
-                    onPress={() => setSelectedObstacle(obs)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.optionText, selectedObstacle === obs && styles.optionTextSelected]}>{obs}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {step === 10 && (
-            <View style={styles.stepBlock}>
-              <Text style={styles.title}>How did you hear about us?</Text>
-              <View style={styles.optionList}>
-                {(['Friends or family', 'Reddit', 'Google search', 'Online article', 'App Store search', 'ChatGPT / AI', 'Facebook / Instagram'] as SourceOption[]).map((src) => (
-                  <TouchableOpacity
-                    key={src}
-                    style={[styles.optionCard, selectedSource === src && styles.optionCardSelected]}
-                    onPress={() => setSelectedSource(src)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.optionText, selectedSource === src && styles.optionTextSelected]}>{src}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {step === 11 && (
-            <View style={styles.stepBlock}>
               <Text style={styles.title}>Create account</Text>
               <View style={[styles.iconInputGroup, { marginBottom: 16 }]}>
                 <Text style={styles.inputPrefixIcon}>✉</Text>
@@ -784,6 +483,306 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
+              </View>
+            </View>
+          )}
+
+          {step === 1 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What should we call you?</Text>
+              <View style={styles.iconInputGroup}>
+                <Text style={styles.inputPrefixIcon}>👤</Text>
+                <TextInput
+                  style={styles.iconTextInput}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="First name"
+                  placeholderTextColor="#555"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+          )}
+
+          {step === 2 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What should we call you?</Text>
+              <View style={styles.iconInputGroup}>
+                <Text style={styles.inputPrefixIcon}>👤</Text>
+                <TextInput
+                  style={styles.iconTextInput}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Last name (optional)"
+                  placeholderTextColor="#555"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+          )}
+
+          {step === 3 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What is your primary fitness goal?</Text>
+              <View style={styles.optionList}>
+                {(['Build muscle', 'Lose fat', 'Gain strength', 'Improve overall health', 'Improve performance', 'Something else'] as GoalOption[]).map((goal) => (
+                  <TouchableOpacity
+                    key={goal}
+                    style={[styles.optionCard, selectedGoal === goal && styles.optionCardSelected]}
+                    onPress={() => setSelectedGoal(goal)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedGoal === goal && styles.optionTextSelected]}>{goal}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 4 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What is your gender?</Text>
+              <View style={styles.optionList}>
+                {(['Male', 'Female', 'Prefer not to say'] as GenderOption[]).map((gender) => (
+                  <TouchableOpacity
+                    key={gender}
+                    style={[styles.optionCard, selectedGender === gender && styles.optionCardSelected]}
+                    onPress={() => setSelectedGender(gender)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedGender === gender && styles.optionTextSelected]}>{gender}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 5 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How tall are you?</Text>
+              <Text style={styles.subtitle}>We use your height to help calculate your strength metrics.</Text>
+
+              {/* Unit Toggle */}
+              <View style={styles.toggleRow}>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, heightUnit === 'in' && styles.toggleBtnActive]}
+                  onPress={() => setHeightUnit('in')}
+                >
+                  <Text style={[styles.toggleText, heightUnit === 'in' && styles.toggleTextActive]}>in</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, heightUnit === 'cm' && styles.toggleBtnActive]}
+                  onPress={() => setHeightUnit('cm')}
+                >
+                  <Text style={[styles.toggleText, heightUnit === 'cm' && styles.toggleTextActive]}>cm</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Height Inputs */}
+              {heightUnit === 'in' ? (
+                <View style={styles.multiInputRow}>
+                  <View style={[styles.inputWrapper, { maxWidth: 120 }]}>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={heightFt}
+                      onChangeText={setHeightFt}
+                      keyboardType="numeric"
+                      maxLength={1}
+                      placeholder="0"
+                      placeholderTextColor="#444"
+                    />
+                    <Text style={styles.inputSuffix}>ft</Text>
+                  </View>
+                  <View style={[styles.inputWrapper, { maxWidth: 120 }]}>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={heightIn}
+                      onChangeText={setHeightIn}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      placeholder="0"
+                      placeholderTextColor="#444"
+                    />
+                    <Text style={styles.inputSuffix}>in</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.singleInputRow}>
+                  <View style={[styles.inputWrapper, { maxWidth: 120 }]}>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={heightCm}
+                      onChangeText={setHeightCm}
+                      keyboardType="numeric"
+                      maxLength={3}
+                      placeholder="0"
+                      placeholderTextColor="#444"
+                    />
+                    <Text style={styles.inputSuffix}>cm</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {step === 6 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What is your current weight?</Text>
+              <Text style={styles.subtitle}>We use your weight to help calculate your strength metrics.</Text>
+
+              {/* Unit Toggle */}
+              <View style={styles.toggleRow}>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, weightUnit === 'lbs' && styles.toggleBtnActive]}
+                  onPress={() => setWeightUnit('lbs')}
+                >
+                  <Text style={[styles.toggleText, weightUnit === 'lbs' && styles.toggleTextActive]}>lbs</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, weightUnit === 'kg' && styles.toggleBtnActive]}
+                  onPress={() => setWeightUnit('kg')}
+                >
+                  <Text style={[styles.toggleText, weightUnit === 'kg' && styles.toggleTextActive]}>kg</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Weight Input */}
+              <View style={styles.singleInputRow}>
+                <View style={[styles.inputWrapper, { maxWidth: 120 }]}>
+                  <TextInput
+                    style={styles.numberInput}
+                    value={weightVal}
+                    onChangeText={setWeightVal}
+                    keyboardType="numeric"
+                    maxLength={3}
+                    placeholder="0"
+                    placeholderTextColor="#444"
+                  />
+                  <Text style={styles.inputSuffix}>{weightUnit}</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {step === 7 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>When is your birthday?</Text>
+              <Text style={styles.subtitle}>We use your age to help calculate your strength metrics.</Text>
+
+              <View style={styles.birthdateRow}>
+                <TextInput
+                  style={[styles.birthInput, { flex: 1.2, minWidth: 50 }]}
+                  value={birthDay}
+                  onChangeText={setBirthDay}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  placeholder="DD"
+                  placeholderTextColor="#444"
+                  textAlign="center"
+                />
+                <Text style={styles.divider}>/</Text>
+                <TextInput
+                  style={[styles.birthInput, { flex: 1.2, minWidth: 50 }]}
+                  value={birthMonth}
+                  onChangeText={setBirthMonth}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  placeholder="MM"
+                  placeholderTextColor="#444"
+                  textAlign="center"
+                />
+                <Text style={styles.divider}>/</Text>
+                <TextInput
+                  style={[styles.birthInput, { flex: 2, minWidth: 80 }]}
+                  value={birthYear}
+                  onChangeText={setBirthYear}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  placeholder="YYYY"
+                  placeholderTextColor="#444"
+                  textAlign="center"
+                />
+              </View>
+            </View>
+          )}
+
+          {step === 8 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How long have you been strength training consistently?</Text>
+              <View style={styles.optionList}>
+                {(["I'm just getting started", 'Less than 1 year', '1-2 years', '2-5 years', 'More than 5 years'] as ExperienceOption[]).map((exp) => (
+                  <TouchableOpacity
+                    key={exp}
+                    style={[styles.optionCardRow, selectedExperience === exp && styles.optionCardSelected]}
+                    onPress={() => setSelectedExperience(exp)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedExperience === exp && styles.optionTextSelected]}>{exp}</Text>
+                    {selectedExperience === exp && (
+                      <Text style={styles.checkmarkIcon}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 9 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What helps you stay motivated to work out?</Text>
+              <View style={styles.optionList}>
+                {[
+                  { title: 'Accountability', desc: 'Having others keep me accountable' },
+                  { title: 'Competition', desc: 'Turning it into a challenge or friendly competition' },
+                  { title: 'Fun', desc: 'Making it fun and part of my lifestyle' },
+                  { title: 'Self-Motivated', desc: 'I stay motivated on my own but enjoy helping others' }
+                ].map((mot) => (
+                  <TouchableOpacity
+                    key={mot.title}
+                    style={[styles.optionColumnCard, selectedMotivation === mot.title && styles.optionCardSelected]}
+                    onPress={() => setSelectedMotivation(mot.title as MotivationOption)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.motTitleText, selectedMotivation === mot.title && styles.optionTextSelected]}>{mot.title}</Text>
+                    <Text style={styles.motDescText}>{mot.desc}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 10 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What do you feel is the biggest obstacle getting in the way of your progress?</Text>
+              <View style={styles.optionList}>
+                {(['Lack of motivation', 'Not sure what to do to get results', 'Not enough time to work out', 'Dealing with an injury', 'Something else', 'None right now'] as ObstacleOption[]).map((obs) => (
+                  <TouchableOpacity
+                    key={obs}
+                    style={[styles.optionCard, selectedObstacle === obs && styles.optionCardSelected]}
+                    onPress={() => setSelectedObstacle(obs)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedObstacle === obs && styles.optionTextSelected]}>{obs}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {step === 11 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>How did you hear about us?</Text>
+              <View style={styles.optionList}>
+                {(['Friends or family', 'Reddit', 'Google search', 'Online article', 'App Store search', 'ChatGPT / AI', 'Facebook / Instagram'] as SourceOption[]).map((src) => (
+                  <TouchableOpacity
+                    key={src}
+                    style={[styles.optionCard, selectedSource === src && styles.optionCardSelected]}
+                    onPress={() => setSelectedSource(src)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.optionText, selectedSource === src && styles.optionTextSelected]}>{src}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
           )}
@@ -824,6 +823,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
+          {/* SECONDARY FLOW: WORKOUT WIZARD */}
           {step === 13 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>{firstName || 'Simran'}, let's go!</Text>
@@ -974,7 +974,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               {isLoading ? (
                 <ActivityIndicator size="small" color="#12110D" />
               ) : (
-                <Text style={styles.actionBtnText}>{step === 11 ? 'Continue' : 'Next'}</Text>
+                <Text style={styles.actionBtnText}>{step === 0 ? 'Continue' : 'Next'}</Text>
               )}
             </TouchableOpacity>
           )}
@@ -1262,6 +1262,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     width: 120,
     height: 48,
+    overflow: 'hidden',
   },
   numberInput: {
     flex: 1,
@@ -1269,6 +1270,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     padding: 0,
+    width: 60,
+    minWidth: 40,
+    borderWidth: 0,
+    borderStyle: 'none',
+    backgroundColor: 'transparent',
+    outlineStyle: 'none',
   },
   inputSuffix: {
     color: '#FFD60A',
@@ -1291,6 +1298,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
+    width: 'auto',
+    borderStyle: 'solid',
+    outlineStyle: 'none',
   },
   divider: {
     color: '#333',
@@ -1353,6 +1363,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     padding: 0,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    outlineStyle: 'none',
   },
   notificationsWrapper: {
     alignItems: 'center',
