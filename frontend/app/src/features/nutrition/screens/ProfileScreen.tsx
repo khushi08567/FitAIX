@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { usePreferences } from '../hooks/useNutritionQueries';
 
 export const ProfileScreen: React.FC = () => {
@@ -79,6 +79,24 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.itemVal}>{favoriteFoods || 'None registered yet'}</Text>
         </View>
       </View>
+
+      {/* Logout Action */}
+      <TouchableOpacity
+        style={styles.logoutBtn}
+        onPress={() => {
+          Alert.alert(
+            'Logout',
+            'Are you sure you want to log out of FitAIX?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'Successfully logged out.') }
+            ]
+          );
+        }}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -187,5 +205,23 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 11,
     fontWeight: '600',
+  },
+  logoutBtn: {
+    backgroundColor: 'rgba(255, 59, 48, 0.12)',
+    borderColor: 'rgba(255, 59, 48, 0.4)',
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  logoutText: {
+    color: '#FF3B30',
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
