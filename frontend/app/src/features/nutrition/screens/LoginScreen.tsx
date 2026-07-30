@@ -34,29 +34,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Register credentials state
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
 
-  // Step 1-2 details
+  // Step details
   const [selectedGoal, setSelectedGoal] = useState<GoalOption | null>(null);
   const [selectedGender, setSelectedGender] = useState<GenderOption | null>(null);
 
-  // Step 3 Height State
+  // Height State
   const [heightUnit, setHeightUnit] = useState<'in' | 'cm'>('in');
   const [heightFt, setHeightFt] = useState('');
   const [heightIn, setHeightIn] = useState('');
   const [heightCm, setHeightCm] = useState('');
 
-  // Step 4 Weight State
+  // Weight State
   const [weightUnit, setWeightUnit] = useState<'lbs' | 'kg'>('kg');
   const [weightVal, setWeightVal] = useState('');
 
-  // Step 5 Birthday State
+  // Birthday State
   const [birthDay, setBirthDay] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthYear, setBirthYear] = useState('');
 
-  // New Onboarding Steps State
+  // Questionnaire details
   const [selectedExperience, setSelectedExperience] = useState<ExperienceOption | null>(null);
   const [selectedMotivation, setSelectedMotivation] = useState<MotivationOption | null>(null);
   const [selectedObstacle, setSelectedObstacle] = useState<ObstacleOption | null>(null);
@@ -82,24 +84,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const handleNextStep = () => {
     setRegisterError('');
     if (step === 0) {
-      if (!regEmail.trim() || !regPassword.trim()) {
-        setRegisterError('Please fill out all credentials.');
-        return;
-      }
-      if (regPassword.length < 6) {
-        setRegisterError('Password must be at least 6 characters.');
+      if (!firstName.trim()) {
+        setRegisterError('Please enter your first name.');
         return;
       }
     }
-    if (step === 1 && !selectedGoal) {
+    // Step 1: Last name is optional, so no validation needed
+    if (step === 2 && !selectedGoal) {
       setRegisterError('Please select a fitness goal.');
       return;
     }
-    if (step === 2 && !selectedGender) {
+    if (step === 3 && !selectedGender) {
       setRegisterError('Please select a gender option.');
       return;
     }
-    if (step === 3) {
+    if (step === 4) {
       if (heightUnit === 'in' && (!heightFt || !heightIn)) {
         setRegisterError('Please enter your height in feet/inches.');
         return;
@@ -109,31 +108,41 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         return;
       }
     }
-    if (step === 4 && !weightVal) {
+    if (step === 5 && !weightVal) {
       setRegisterError('Please enter your weight.');
       return;
     }
-    if (step === 5 && (!birthDay || !birthMonth || !birthYear)) {
+    if (step === 6 && (!birthDay || !birthMonth || !birthYear)) {
       setRegisterError('Please enter your complete birthday.');
       return;
     }
-    if (step === 6 && !selectedExperience) {
+    if (step === 7 && !selectedExperience) {
       setRegisterError('Please select your training experience.');
       return;
     }
-    if (step === 7 && !selectedMotivation) {
+    if (step === 8 && !selectedMotivation) {
       setRegisterError('Please select what motivates you.');
       return;
     }
-    if (step === 8 && !selectedObstacle) {
+    if (step === 9 && !selectedObstacle) {
       setRegisterError('Please select your biggest obstacle.');
       return;
     }
-    if (step === 9) {
-      if (!selectedSource) {
-        setRegisterError('Please select how you heard about us.');
+    if (step === 10 && !selectedSource) {
+      setRegisterError('Please select how you heard about us.');
+      return;
+    }
+    if (step === 11) {
+      if (!regEmail.trim() || !regPassword.trim()) {
+        setRegisterError('Please enter an email and password.');
         return;
       }
+      if (regPassword.length < 6) {
+        setRegisterError('Password must be at least 6 characters.');
+        return;
+      }
+    }
+    if (step === 12) {
       // Finish Registration
       setIsLoading(true);
       setTimeout(() => {
@@ -160,7 +169,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const renderProgressBar = () => {
     return (
       <View style={styles.progressContainer}>
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((idx) => (
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((idx) => (
           <View
             key={idx}
             style={[
@@ -244,7 +253,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     );
   }
 
-  // Multi-step Registration Wizard (10 Steps)
+  // Multi-step Registration Wizard (13 Steps)
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -270,33 +279,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           {/* Wizard step views */}
           {step === 0 && (
             <View style={styles.stepBlock}>
-              <Text style={styles.title}>Create your account</Text>
-              <Text style={styles.subtitle}>Enter a username (email) and password to get started.</Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Username / Email</Text>
+              <Text style={styles.title}>What should we call you?</Text>
+              <View style={styles.iconInputGroup}>
+                <Text style={styles.inputPrefixIcon}>👤</Text>
                 <TextInput
-                  style={styles.input}
-                  value={regEmail}
-                  onChangeText={setRegEmail}
-                  placeholder="you@example.com"
+                  style={styles.iconTextInput}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="First name"
                   placeholderTextColor="#555"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  value={regPassword}
-                  onChangeText={setRegPassword}
-                  placeholder="Create a strong password"
-                  placeholderTextColor="#555"
-                  secureTextEntry
-                  autoCapitalize="none"
                   autoCorrect={false}
                 />
               </View>
@@ -304,6 +295,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           )}
 
           {step === 1 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>What should we call you?</Text>
+              <View style={styles.iconInputGroup}>
+                <Text style={styles.inputPrefixIcon}>👤</Text>
+                <TextInput
+                  style={styles.iconTextInput}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Last name (optional)"
+                  placeholderTextColor="#555"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+          )}
+
+          {step === 2 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>What is your primary fitness goal?</Text>
               <View style={styles.optionList}>
@@ -321,7 +329,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>What is your gender?</Text>
               <View style={styles.optionList}>
@@ -339,7 +347,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>How tall are you?</Text>
               <Text style={styles.subtitle}>We use your height to help calculate your strength metrics.</Text>
@@ -407,7 +415,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>What is your current weight?</Text>
               <Text style={styles.subtitle}>We use your weight to help calculate your strength metrics.</Text>
@@ -446,7 +454,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>When is your birthday?</Text>
               <Text style={styles.subtitle}>We use your age to help calculate your strength metrics.</Text>
@@ -488,7 +496,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 6 && (
+          {step === 7 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>How long have you been strength training consistently?</Text>
               <View style={styles.optionList}>
@@ -509,7 +517,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 7 && (
+          {step === 8 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>What helps you stay motivated to work out?</Text>
               <View style={styles.optionList}>
@@ -533,7 +541,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 8 && (
+          {step === 9 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>What do you feel is the biggest obstacle getting in the way of your progress?</Text>
               <View style={styles.optionList}>
@@ -551,7 +559,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {step === 9 && (
+          {step === 10 && (
             <View style={styles.stepBlock}>
               <Text style={styles.title}>How did you hear about us?</Text>
               <View style={styles.optionList}>
@@ -569,19 +577,112 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </View>
           )}
 
-          {/* Next Button */}
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={handleNextStep}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#12110D" />
-            ) : (
-              <Text style={styles.actionBtnText}>{step === 9 ? 'Create Account' : 'Next'}</Text>
-            )}
-          </TouchableOpacity>
+          {step === 11 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>Create account</Text>
+              <View style={[styles.iconInputGroup, { marginBottom: 16 }]}>
+                <Text style={styles.inputPrefixIcon}>✉</Text>
+                <TextInput
+                  style={styles.iconTextInput}
+                  value={regEmail}
+                  onChangeText={setRegEmail}
+                  placeholder="Email"
+                  placeholderTextColor="#555"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              <View style={styles.iconInputGroup}>
+                <Text style={styles.inputPrefixIcon}>🔑</Text>
+                <TextInput
+                  style={styles.iconTextInput}
+                  value={regPassword}
+                  onChangeText={setRegPassword}
+                  placeholder="Create password"
+                  placeholderTextColor="#555"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+          )}
+
+          {step === 12 && (
+            <View style={styles.stepBlock}>
+              <Text style={styles.title}>Don't miss out</Text>
+              <Text style={styles.subtitle}>Get workout reminders, rest timer alerts, and chat notifications to keep you on track and in the loop.</Text>
+
+              {/* Mock Notification Overlays */}
+              <View style={styles.notificationsWrapper}>
+                <View style={styles.notificationCard}>
+                  <View style={styles.notifIconContainer}>
+                    <Text style={styles.notifIcon}>⌁</Text>
+                  </View>
+                  <View style={styles.notifContent}>
+                    <View style={styles.notifHeader}>
+                      <Text style={styles.notifTitle}>FitAIX</Text>
+                      <Text style={styles.notifTime}>1 min ago</Text>
+                    </View>
+                    <Text style={styles.notifText}>⏰ Rest time is up!</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.notificationCard, { opacity: 0.75, transform: [{ scale: 0.95 }] }]}>
+                  <View style={[styles.notifIconContainer, { backgroundColor: '#8B5CF6' }]}>
+                    <Text style={styles.notifIcon}>📝</Text>
+                  </View>
+                  <View style={styles.notifContent}>
+                    <View style={styles.notifHeader}>
+                      <Text style={styles.notifTitle}>FitAIX Coach</Text>
+                      <Text style={styles.notifTime}>5 mins ago</Text>
+                    </View>
+                    <Text style={styles.notifText}>📝 Workout Reminder: Legs & Abs</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Action Button Row */}
+          {step === 12 ? (
+            <View style={styles.doubleButtonColumn}>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={handleNextStep}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#12110D" />
+                ) : (
+                  <Text style={styles.actionBtnText}>Enable</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.laterBtn}
+                onPress={handleNextStep}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.laterBtnText}>I'll do this later</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={handleNextStep}
+              disabled={isLoading}
+              activeOpacity={0.85}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#12110D" />
+              ) : (
+                <Text style={styles.actionBtnText}>{step === 11 ? 'Continue' : 'Next'}</Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -666,7 +767,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    gap: 6,
+    gap: 4,
     marginBottom: 32,
   },
   progressDash: {
@@ -926,5 +1027,100 @@ const styles = StyleSheet.create({
     color: '#8B5CF6',
     fontSize: 11,
     fontWeight: '600',
+  },
+  iconInputGroup: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#0F0E0D',
+    borderColor: '#2D2C28',
+    borderWidth: 1,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  inputPrefixIcon: {
+    color: '#888',
+    fontSize: 16,
+    marginRight: 12,
+  },
+  iconTextInput: {
+    flex: 1,
+    color: '#FFF',
+    fontSize: 14,
+    padding: 0,
+  },
+  notificationsWrapper: {
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 20,
+    width: '100%',
+  },
+  notificationCard: {
+    backgroundColor: '#1E1D1A',
+    borderColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
+  notifIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#FFD60A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notifIcon: {
+    fontSize: 16,
+    color: '#12110D',
+  },
+  notifContent: {
+    flex: 1,
+    gap: 2,
+  },
+  notifHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  notifTitle: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  notifTime: {
+    color: '#666',
+    fontSize: 10,
+  },
+  notifText: {
+    color: '#A6A090',
+    fontSize: 11,
+  },
+  doubleButtonColumn: {
+    width: '100%',
+    gap: 10,
+  },
+  laterBtn: {
+    width: '100%',
+    height: 46,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  laterBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
