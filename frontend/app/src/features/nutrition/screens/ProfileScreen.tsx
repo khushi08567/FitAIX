@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { usePreferences } from '../hooks/useNutritionQueries';
 
 export const ProfileScreen: React.FC = () => {
@@ -84,14 +84,21 @@ export const ProfileScreen: React.FC = () => {
       <TouchableOpacity
         style={styles.logoutBtn}
         onPress={() => {
-          Alert.alert(
-            'Logout',
-            'Are you sure you want to log out of FitAIX?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'Successfully logged out.') }
-            ]
-          );
+          if (Platform.OS === 'web') {
+            const confirmLogout = window.confirm('Are you sure you want to log out of FitAIX?');
+            if (confirmLogout) {
+              alert('Successfully logged out.');
+            }
+          } else {
+            Alert.alert(
+              'Logout',
+              'Are you sure you want to log out of FitAIX?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'Successfully logged out.') }
+              ]
+            );
+          }
         }}
         activeOpacity={0.8}
       >
