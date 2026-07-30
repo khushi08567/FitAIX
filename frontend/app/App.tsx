@@ -24,18 +24,19 @@ type TabName = 'Dashboard' | 'Workout' | 'Nutrition' | 'Community' | 'Profile';
 
 interface MainAppProps {
   onLogout: () => void;
+  userProfile?: any;
 }
 
-function MainApp({ onLogout }: MainAppProps) {
+function MainApp({ onLogout, userProfile }: MainAppProps) {
   const [activeTab, setActiveTab] = useState<TabName>('Dashboard');
   const [showChat, setShowChat] = useState(false);
 
   const renderActiveScreen = () => {
     switch (activeTab) {
       case 'Dashboard':
-        return <DashboardScreen onNavigate={setActiveTab} />;
+        return <DashboardScreen onNavigate={setActiveTab} userProfile={userProfile} />;
       case 'Workout':
-        return <WorkoutScreen />;
+        return <WorkoutScreen userProfile={userProfile} />;
       case 'Nutrition':
         return <NutritionScreen />;
       case 'Community':
@@ -106,13 +107,25 @@ const styles = StyleSheet.create({
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   return (
     <QueryClientProvider client={queryClient}>
       {isLoggedIn ? (
-        <MainApp onLogout={() => setIsLoggedIn(false)} />
+        <MainApp
+          onLogout={() => {
+            setUserProfile(null);
+            setIsLoggedIn(false);
+          }}
+          userProfile={userProfile}
+        />
       ) : (
-        <LoginScreen onLogin={() => setIsLoggedIn(true)} />
+        <LoginScreen
+          onLogin={(user) => {
+            setUserProfile(user);
+            setIsLoggedIn(true);
+          }}
+        />
       )}
     </QueryClientProvider>
   );

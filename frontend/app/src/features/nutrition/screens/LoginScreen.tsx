@@ -13,7 +13,7 @@ import {
 import { nutritionApi } from '../services/nutritionApi';
 
 interface LoginScreenProps {
-  onLogin: () => void;
+  onLogin: (user: any) => void;
 }
 
 type GoalOption = 'Build muscle' | 'Lose fat' | 'Gain strength' | 'Improve overall health' | 'Improve performance' | 'Something else';
@@ -142,12 +142,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     }
     setIsLoggingIn(true);
     try {
-      await nutritionApi.loginUser({
+      const user = await nutritionApi.loginUser({
         email: signInEmail,
         password: signInPassword,
       });
       setIsLoggingIn(false);
-      onLogin();
+      onLogin(user);
     } catch (err: any) {
       setIsLoggingIn(false);
       setSignInError(err.response?.data?.message || 'Invalid email or password.');
@@ -157,7 +157,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const handleCompleteRegistration = async () => {
     setIsLoading(true);
     try {
-      await nutritionApi.registerUser({
+      const user = await nutritionApi.registerUser({
         email: regEmail,
         password: regPassword,
         firstName,
@@ -178,7 +178,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       });
       setIsLoading(false);
       alert('Account successfully created! Welcome to FitAIX.');
-      onLogin();
+      onLogin(user);
     } catch (err: any) {
       setIsLoading(false);
       alert(err.response?.data?.message || 'Failed to create account. Please try again.');

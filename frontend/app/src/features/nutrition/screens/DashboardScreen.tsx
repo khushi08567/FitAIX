@@ -4,22 +4,24 @@ import { useDailyNutrition, useHydration } from '../hooks/useNutritionQueries';
 
 interface DashboardScreenProps {
   onNavigate: (tab: 'Dashboard' | 'Workout' | 'Nutrition' | 'Community' | 'Profile') => void;
+  userProfile?: any;
 }
 
-export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) => {
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, userProfile }) => {
   const { data: dailyData } = useDailyNutrition();
   const { data: hydrationData } = useHydration();
 
   const caloriesGoal = dailyData?.caloriesGoal ?? 2200;
   const caloriesConsumed = dailyData?.caloriesConsumed ?? 1480;
   const progressPercent = Math.min(Math.round((caloriesConsumed / caloriesGoal) * 100), 100);
+  const isInjured = userProfile?.obstacle === 'Dealing with an injury';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.headerContainer}>
         <Text style={styles.greeting}>Welcome Back,</Text>
-        <Text style={styles.username}>Simran 👋</Text>
+        <Text style={styles.username}>{userProfile?.firstName || 'Simran'} 👋</Text>
       </View>
 
       {/* Daily Target Progress Ring Card */}
@@ -56,19 +58,34 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
         </View>
       </View>
 
-      {/* Injury Warnings & Adaptive Notice */}
-      <View style={styles.injuryCard}>
-        <View style={styles.injuryHeader}>
-          <Text style={styles.injuryTitle}>⚠️ Live Injury Advisory</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>Active</Text>
+      {/* Injury Warnings or AI Coach Tip */}
+      {isInjured ? (
+        <View style={styles.injuryCard}>
+          <View style={styles.injuryHeader}>
+            <Text style={styles.injuryTitle}>⚠️ Live Injury Advisory</Text>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>Active</Text>
+            </View>
           </View>
+          <Text style={styles.injuryName}>Left Knee Patellar Tendinitis</Text>
+          <Text style={styles.injuryDesc}>
+            Coach Rachel has automatically adapted your current routines to lock out knee flexion past 60 degrees. Knee-safe lift targets are applied.
+          </Text>
         </View>
-        <Text style={styles.injuryName}>Left Knee Patellar Tendinitis</Text>
-        <Text style={styles.injuryDesc}>
-          Coach Rachel has automatically adapted your current routines to lock out knee flexion past 60 degrees. Knee-safe lift targets are applied.
-        </Text>
-      </View>
+      ) : (
+        <View style={[styles.injuryCard, { borderColor: '#00F0FF' }]}>
+          <View style={styles.injuryHeader}>
+            <Text style={[styles.injuryTitle, { color: '#00F0FF' }]}>💡 AI Coach Tip</Text>
+            <View style={[styles.statusBadge, { backgroundColor: 'rgba(0, 240, 255, 0.15)' }]}>
+              <Text style={[styles.statusText, { color: '#00F0FF' }]}>Optimal</Text>
+            </View>
+          </View>
+          <Text style={styles.injuryName}>Optimal Split Mode</Text>
+          <Text style={styles.injuryDesc}>
+            Based on your goal to {userProfile?.goal || 'Build muscle'}, Rachel has optimized your training routine for target weight progression today.
+          </Text>
+        </View>
+      )}
 
       {/* Quick Navigation Cards */}
       <Text style={styles.sectionHeader}>Quick Actions</Text>

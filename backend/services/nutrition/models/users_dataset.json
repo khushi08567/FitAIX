@@ -1,0 +1,23 @@
+[
+  {
+    "userId": "user_1785410749310",
+    "email": "r18aven@gmal.com",
+    "password": "simran",
+    "firstName": "simran",
+    "lastName": "",
+    "goal": "Gain strength",
+    "gender": "Female",
+    "height": "5ft 7in",
+    "weight": "67kg",
+    "birthdate": "31/10/2005",
+    "experience": "1-2 years",
+    "motivation": "Competition",
+    "obstacle": "Dealing with an injury",
+    "source": "Google search",
+    "workoutLocation": "Gym",
+    "workoutExperience": "Intermediate",
+    "workoutDuration": "45 minutes",
+    "workoutFrequency": "4 days",
+    "createdAt": "2026-07-30T11:25:49.310Z"
+  }
+]
